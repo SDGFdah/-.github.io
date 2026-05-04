@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ระบบสั่งอาหาร</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+body { font-family: Arial; background:#f2f2f2; margin:0; }
+.container { display:flex; flex-wrap:wrap; }
+.box { flex:1; min-width:300px; padding:20px; }
+.form { background:white; }
+.orders { background:#fafafa; }
+
+input, select {
+width:100%; padding:10px; margin:5px 0;
+}
+
+button {
+width:100%; padding:10px;
+background:green; color:white;
+border:none; border-radius:5px;
+}
+
+.card {
+background:white;
+padding:10px;
+margin:10px 0;
+border-left:5px solid orange;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="box form">
+<h3>🍛 สั่งอาหาร</h3>
+
+<input id="name" placeholder="ชื่อ">
+<input id="phone" placeholder="เบอร์">
+<input id="address" placeholder="ที่อยู่">
+
+<select id="menu">
+<option value="50">กะเพราไก่ 50฿</option>
+<option value="45">ข้าวผัด 45฿</option>
+<option value="55">ผัดซีอิ๊ว 55฿</option>
+</select>
+
+<input id="qty" type="number" value="1">
+
+<select id="type">
+<option value="delivery">จัดส่ง</option>
+<option value="pickup">มารับเอง</option>
+</select>
+
+<button onclick="orderFood()">สั่ง</button>
+</div>
+
+<div class="box orders">
+<h3>📦 ออเดอร์ (<span id="count">0</span>)</h3>
+<div id="list"></div>
+</div>
+
+</div>
+
+<script>
+
+// 🔥 ใส่ Firebase ของนายตรงนี้
+const firebaseConfig = {
+apiKey:"AIzaSyBqwSbNZuG3EeOgafKAA5gpIXYa6qEXnRM",
+authDomain:"project-3793658895912547202.firebaseapp.com",
+databaseURL:https://project-3793658895912547202-default-rtdb.asia-southeast1.firebasedatabase.app/
+projectId:"project-3793658895912547202"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// สั่งอาหาร
+function orderFood() {
+
+let name = document.getElementById("name").value;
+let phone = document.getElementById("phone").value;
+let address = document.getElementById("address").value;
+
+let menu = document.getElementById("menu");
+let menuText = menu.options[menu.selectedIndex].text;
+let price = parseInt(menu.value);
+
+let qty = parseInt(document.getElementById("qty").value);
+let type = document.getElementById("type").value;
+
+if(name === "" || phone === "") {
+alert("กรอกชื่อกับเบอร์");
+return;
+}
+
+let total = price * qty;
+
+db.ref("orders").push({
+name, phone, address,
+menu: menuText,
+qty, total, type,
+status: "รอทำ",
+time: new Date().toLocaleString()
+});
+}
+
+// แสดงออเดอร์
+db.ref("orders").on("value", (snapshot) => {
+
+let list = document.getElementById("list");
+list.innerHTML = "";
+
+let count = 0;
+
+snapshot.forEach((child) => {
+let data = child.val();
+let key = child.key;
+count++;
+
+list.innerHTML += `
+<div class="card">
+👤 ${data.name} (${data.phone})<br>
+🍽 ${data.menu} x ${data.qty}<br>
+💰 ${data.total} บาท<br>
+🚚 ${data.type === "delivery" ? data.address : "มารับเอง"}<br>
+🕒 ${data.time}<br>
+📌 ${data.status}
+
+<button onclick="updateStatus('${key}','กำลังทำ')">กำลังทำ</button>
+<button onclick="updateStatus('${key}','เสร็จแล้ว')">เสร็จแล้ว</button>
+<button onclick="del('${key}')">ลบ</button>
+</div>
+`;
+});
+
+document.getElementById("count").innerText = count;
+});
+
+// อัปเดตสถานะ
+function updateStatus(key, status) {
+db.ref("orders/" + key).update({status});
+}
+
+// ลบ
+function del(key) {
+if(confirm("ลบ?")) {
+db.ref("orders/" + key).remove();
+}
+}
+
+</script>
+
+</body>
+</html>
