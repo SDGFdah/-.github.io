@@ -3,130 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบสั่งอาหารอัจฉริยะ</title>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
+    <title>ร้านอาหารตามสั่ง - ลูกค้า</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2ecc71; --secondary: #e67e22; --danger: #e74c3c; }
-        body { font-family: 'Kanit', sans-serif; background:#f4f7f6; margin:0; color: #333; }
-        .container { display:flex; flex-wrap:wrap; max-width: 1200px; margin: auto; }
-        .box { flex:1; min-width:350px; padding:20px; box-sizing: border-box; }
-        .card-ui { background:white; padding:20px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        /* Menu Grid */
-        .menu-item { display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; padding: 10px 0; }
-        .menu-img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
-        
-        input, select, textarea { width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:8px; box-sizing: border-box; }
-        button { width:100%; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition: 0.3s; margin-top: 5px; }
-        .btn-order { background: var(--primary); color:white; font-size: 1.1em; }
-        .btn-gps { background: #3498db; color:white; }
-        
-        /* Order Cards */
-        .order-card { background:white; padding:15px; margin:10px 0; border-radius:10px; border-left:8px solid var(--secondary); position: relative; }
-        .status-badge { display:inline-block; padding:3px 8px; border-radius:5px; font-size:0.8em; background:#eee; }
-        .qr-area { text-align: center; margin-top: 10px; }
-        .qr-area img { width: 150px; border: 1px solid #eee; }
+        :root { --main: #ff4757; --sec: #2f3542; }
+        body { font-family: 'Kanit', sans-serif; background: #f1f2f6; margin: 0; padding: 10px; }
+        .page { display: none; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .active { display: block; }
+        img { width: 100%; border-radius: 15px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; margin-top: 10px; font-weight: 600; }
+        .btn-next { background: var(--main); color: white; }
+        .btn-cancel { background: #ced4da; color: #333; font-size: 14px; }
+        .stock-tag { font-size: 12px; color: #ff4757; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    
-    <!-- ฝั่งลูกค้า: สั่งอาหาร -->
-    <div class="box">
-        <div class="card-ui">
-            <h2>🍛 สั่งอาหาร/จองล่วงหน้า</h2>
-            <div id="menu-list">
-                <!-- เมนูจะโหลดจาก JavaScript -->
-            </div>
-            
-            <hr>
-            <input id="name" placeholder="ชื่อผู้สั่ง">
-            <input id="phone" placeholder="เบอร์โทรศัพท์" type="tel">
-            
-            <select id="order_type">
-                <option value="pickup">📍 มารับเองที่ร้าน (จอง)</option>
-                <option value="delivery">🚚 ให้ไปส่ง (ใส่ที่อยู่/GPS)</option>
-            </select>
-            
-            <div id="address_section" style="display:none;">
-                <textarea id="address" placeholder="ที่อยู่โดยละเอียด"></textarea>
-                <button class="btn-gps" onclick="getLocation()">📌 แชร์ตำแหน่ง GPS ปัจจุบัน</button>
-                <p id="gps_status" style="font-size:0.8em; color:gray;"></p>
-            </div>
-
-            <button class="btn-order" onclick="placeOrder()">ยืนยันการสั่งซื้อ</button>
-        </div>
-        
-        <div class="card-ui">
-            <h4>💬 ความคิดเห็นลูกค้า</h4>
-            <input id="comment_name" placeholder="ชื่อ">
-            <input id="comment_text" placeholder="รสชาติเป็นอย่างไรบ้าง?">
-            <button onclick="sendComment()">ส่งความเห็น</button>
-        </div>
+    <!-- หน้าที่ 1: ข้อมูลลูกค้า -->
+    <div id="p1" class="page active">
+        <h2>สวัสดีครับ/ค่ะ 🙏</h2>
+        <p>คุณลูกค้าชื่ออะไรครับ/ค่ะ?</p>
+        <input type="text" id="custName" placeholder="ชื่อลูกค้า" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        <p>กรุณากรอกช่องทางติดต่อ (เบอร์โทร):</p>
+        <input type="tel" id="custTel" placeholder="0xx-xxx-xxxx" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        <button class="btn btn-next" onclick="go(2)">เข้าสู่หน้าร้าน ➔</button>
     </div>
 
-    <!-- ฝั่งร้านค้า: จัดการออเดอร์ -->
-    <div class="box">
-        <div class="card-ui" style="background: #2c3e50; color: white;">
-            <h3>📦 จัดการออเดอร์ (<span id="count">0</span>)</h3>
-            <p>ยอดรวมวันนี้: <span id="daily_total">0</span> บาท</p>
-        </div>
-        <div id="order_list"></div>
+    <!-- หน้าที่ 2: รีวิว/บรรยากาศ -->
+    <div id="p2" class="page">
+        <h2>บรรยากาศร้านเรา ✨</h2>
+        <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=500" alt="ร้าน">
+        <p>ร้านสะอาด บริการเป็นกันเอง เติมน้ำฟรีไม่อั้น!</p>
+        <button class="btn btn-next" onclick="go(3)">ดูเมนูอาหาร ➔</button>
+        <button class="btn btn-cancel" onclick="cancelOrder()">ยกเลิกออเดอร์</button>
     </div>
 
-</div>
+    <!-- หน้าที่ 3: เมนูและการคำนวณ -->
+    <div id="p3" class="page">
+        <h3>เลือกเมนูที่อยากทาน 🍳</h3>
+        <div id="menuList">
+            <!-- เมนูจะดึงจาก Stock แม่ค้า -->
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                <p><b>พะแนงหมู (60.-)</b> <span id="stock-panang" class="stock-tag">เหลือ 0</span></p>
+                <input type="number" id="qty-panang" value="0" min="0" onchange="calcPrice()">
+            </div>
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                <p><b>กะเพราหมูกรอบ (70.-)</b> <span id="stock-krapao" class="stock-tag">เหลือ 0</span></p>
+                <input type="number" id="qty-krapao" value="0" min="0" onchange="calcPrice()">
+            </div>
+        </div>
+        <p><b>รวมทั้งสิ้น: <span id="totalPrice">0</span> บาท</b></p>
+        <textarea id="note" placeholder="สั่งล่วงหน้า/ระบุพิเศษ (ไม่ใส่พริก/น้ำตาล/ผัก)" style="width:100%; margin-top:10px; border-radius:8px;"></textarea>
+        <button class="btn btn-next" onclick="go(4)">ไปที่หน้าชำระเงิน ➔</button>
+        <button class="btn btn-cancel" onclick="cancelOrder()">ยกเลิกออเดอร์</button>
+    </div>
 
-<!-- Audio Elements (ใส่ไฟล์เสียงที่คุณต้องการ) -->
-<audio id="sound_new" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
-<audio id="sound_cancel" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"></audio>
+    <!-- หน้าที่ 4: ชำระเงิน -->
+    <div id="p4" class="page">
+        <h3>ชำระเงิน 💰</h3>
+        <select id="payMethod" style="width:100%; padding:10px; margin-bottom:10px;">
+            <option value="เงินสด">เงินสด</option>
+            <option value="สแกนจ่าย">สแกนจ่าย</option>
+        </select>
+        <div id="qrArea" style="text-align:center;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PROMPTPAY" style="width:150px;">
+            <p>แนบสลิปที่นี่:</p>
+            <input type="file" id="slip">
+        </div>
+        <button class="btn btn-next" onclick="confirmOrder()" style="background:#2ed573;">ยืนยันและสั่งซื้อ!</button>
+        <button class="btn btn-cancel" onclick="cancelOrder()">ยกเลิกออเดอร์</button>
+        <p style="font-size:12px; color:gray; text-align:center;">ติดต่อแม่ค้า: 0xx-xxx-xxxx</p>
+    </div>
 
-<script>
-<!-- 1. เรียกใช้ Library ของ Firebase (ต้องมี 2 อันนี้) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        // ใส่ Config Firebase ของคุณที่นี่
+        const firebaseConfig = { apiKey: "...", databaseURL: "...", projectId: "..." };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-<script>
-  // 2. ตั้งค่าการเชื่อมต่อ (เอาตัวเลขและลิงก์ของคุณมาใส่)
-  const firebaseConfig = {
-    apiKey: "AIzaSyARQ9iDSAP-HSnZlHH854p1qnUPCmjtyvo",
-    authDomain: "project-8472595372192265726.firebaseapp.com",
-    databaseURL: https://project-8472595372192265726-default-rtdb.asia-southeast1.firebasedatabase.app/
-    projectId: "project-8472595372192265726",
-    storageBucket: "project-8472595372192265726.appspot.com",
-    messagingSenderId: "847259537219",
-    appId: "เอา App ID ของคุณมาวางตรงนี้"
-  };
+        let currentTotal = 0;
 
-  // 3. เริ่มทำงาน
-  if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-  }
-  const db = firebase.database().ref('orders'); // <--- ชื่อหัวข้อที่จะไปแทนที่ null
+        function go(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('p' + page).classList.add('active');
+        }
 
-  // 4. ฟังก์ชันตอนกดปุ่มสั่งอาหาร
-  function submitOrder() {
-    // สมมติว่ามีช่องกรอกชื่อ ID ว่า "customerName"
-    const name = document.getElementById('customerName').value; 
-    
-    db.push({
-      name: name,
-      time: new Date().toLocaleString(),
-      status: "รอดำเนินการ"
-    })
-    .then(() => {
-      alert("สั่งอาหารสำเร็จ! ข้อมูลไปโผล่ที่ Firebase แล้ว");
-    })
-    .catch((error) => {
-      alert("เกิดข้อผิดพลาด: " + error.message);
-    });
-  }
-</script>
-</script>
+        function calcPrice() {
+            let p1 = document.getElementById('qty-panang').value * 60;
+            let p2 = document.getElementById('qty-krapao').value * 70;
+            currentTotal = p1 + p2;
+            document.getElementById('totalPrice').innerText = currentTotal;
+        }
 
+        function confirmOrder() {
+            const name = document.getElementById('custName').value;
+            const tel = document.getElementById('custTel').value;
+            if(!name || !tel) return alert("กรุณากรอกข้อมูลให้ครบ");
+
+            db.ref('orders').push({
+                name: name,
+                tel: tel,
+                total: currentTotal,
+                note: document.getElementById('note').value,
+                method: document.getElementById('payMethod').value,
+                status: 'ordered',
+                time: new Date().getTime()
+            }).then(() => {
+                alert("สั่งซื้อสำเร็จ! รอแม่ค้าทำอาหารนะครับ");
+                location.reload();
+            });
+        }
+
+        function cancelOrder() {
+            if(confirm("ต้องการยกเลิกออเดอร์ใช่ไหม?")) {
+                db.ref('events').set({type: 'cancel', time: new Date().getTime()});
+                alert("ยกเลิกออเดอร์แล้ว ระบบจะแจ้งแม่ค้าเพื่อคืนเงิน (ถ้าจ่ายแล้ว)");
+                location.reload();
+            }
+        }
+
+        // ดึงจำนวนของจาก Database
+        db.ref('stock').on('value', snap => {
+            const data = snap.val();
+            if(data) {
+                document.getElementById('stock-panang').innerText = "เหลือ " + data.panang;
+                document.getElementById('stock-krapao').innerText = "เหลือ " + data.krapao;
+            }
+        });
+    </script>
 </body>
 </html>
