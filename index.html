@@ -3,45 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet - Admin (Connected)</title>
+    <title>Nature Gourmet - Admin (Official)</title>
     
-    <!-- โหลด Firebase SDK แบบมาตรฐาน (ใช้ได้กับ Browser ทันที) -->
+    <!-- โหลด Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         :root { --p: #2d5a27; --s: #e67e22; --bg: #f4f7f1; }
-        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; transition: 0.5s; }
+        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; }
         header { background: var(--p); color: white; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .status-bar { font-size: 0.8rem; padding: 5px; background: rgba(0,0,0,0.2); }
-        
+        .status-bar { font-size: 0.8rem; padding: 5px; background: rgba(0,0,0,0.2); transition: 0.3s; }
         .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
-        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #888; transition: 0.3s; }
+        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #888; }
         .nav-item.active { color: var(--p); border-bottom: 4px solid var(--p); background: #f9f9f9; }
-
         .container { padding: 20px; max-width: 1200px; margin: auto; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        
         .card { 
-            background: white; border-radius: 25px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-            border-left: 10px solid var(--s); position: relative; animation: popIn 0.3s ease;
+            background: white; border-radius: 20px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+            border-left: 10px solid var(--s); position: relative; margin-bottom: 10px; animation: slideIn 0.3s ease;
         }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .btn { border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px; }
+        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-done { background: var(--p); color: white; }
-        .btn-cancel { background: #fdf2f2; color: #e74c3c; font-size: 0.8rem; }
-
-        /* ตกแต่ง Mascot */
-        #mascot-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; cursor: move; width: 120px; }
-        #mascot-img { width: 100%; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); }
-
-        .settings-pane { background: white; padding: 25px; border-radius: 25px; max-width: 500px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        input[type="text"], input[type="color"] { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; box-sizing: border-box; }
+        .btn-cancel { background: #fee2e2; color: #ef4444; font-size: 0.8rem; }
     </style>
 </head>
-<body ondrop="dropMascot(event)" ondragover="allowDrop(event)">
+<body>
 
 <header>
     <h1 style="margin:0; font-size: 1.5rem;">NATURE GOURMET ADMIN</h1>
@@ -49,49 +38,21 @@
 </header>
 
 <div class="nav">
-    <div class="nav-item active" onclick="changePage('live')">ออเดอร์ใหม่</div>
-    <div class="nav-item" onclick="changePage('history')">ประวัติ</div>
-    <div class="nav-item" onclick="changePage('settings')">ตกแต่งหน้าจอ</div>
+    <div class="nav-item active" id="nav-live" onclick="changePage('live')">ออเดอร์ใหม่</div>
+    <div class="nav-item" id="nav-history" onclick="changePage('history')">ประวัติ</div>
 </div>
 
 <div class="container">
-    <!-- หน้าออเดอร์สด -->
     <div id="page-live" class="grid">
-        <p style="text-align:center; grid-column:1/-1;">รอออเดอร์ใหม่เข้ามา...</p>
+        <p style="text-align:center; grid-column:1/-1; margin-top:50px;">กำลังรอออเดอร์ใหม่จากระบบ...</p>
     </div>
-
-    <!-- หน้าประวัติ -->
     <div id="page-history" style="display:none;" class="grid"></div>
-    
-    <!-- หน้าตั้งค่า -->
-    <div id="page-settings" style="display:none;">
-        <div class="settings-pane">
-            <h3 style="margin-top:0">🎨 ตกแต่งเฉพาะเครื่องนี้</h3>
-            <div style="margin-bottom:15px">
-                <label>สีพื้นหลัง:</label>
-                <input type="color" id="set-bg" onchange="updateDecor()">
-            </div>
-            <div style="margin-bottom:15px">
-                <label>รูปมาสคอต (URL รูปจากเน็ต):</label>
-                <input type="text" id="set-img" placeholder="วางลิงก์รูป .png หรือ .jpg" oninput="updateDecor()">
-            </div>
-            <div style="margin-bottom:15px">
-                <label>หรืออัปโหลดรูป:</label>
-                <input type="file" accept="image/*" onchange="uploadImg(this)">
-            </div>
-            <button class="btn btn-done" onclick="saveDecor()">💾 บันทึกการตกแต่ง</button>
-        </div>
-    </div>
-</div>
-
-<div id="mascot-container" draggable="true" ondragstart="dragMascot(event)">
-    <img src="https://cdn-icons-png.flaticon.com/512/3081/3081986.png" id="mascot-img">
 </div>
 
 <audio id="bell" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-        // [1] Config ของพี่ที่ตรวจสอบแล้วว่าถูกต้อง
+    // 1. Firebase Configuration (อ้างอิงจากโปรเจกต์ของพี่)
     const firebaseConfig = {
         apiKey: "AIzaSyARQ9iDSAP-HSnZlHH854p1qnUPCmjtyvo",
         authDomain: "project-8472595372192265726.firebaseapp.com",
@@ -105,45 +66,129 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
 
-    // [2] เปลี่ยนชื่อจาก 'orders' เป็น 'verified_orders' ให้ตรงกับ Rules ของพี่
-    db.ref('verified_orders').on('value', snap => {
-        const data = snap.val();
-        render(data, 'page-live', true); // ส่งข้อมูลไปแสดงผลที่หน้าจอ
+    // 2. เช็คสถานะการเชื่อมต่อ
+    db.ref(".info/connected").on("value", (snap) => {
+        const stat = document.getElementById('net-status');
+        if (snap.val() === true) {
+            stat.innerText = "🟢 ออนไลน์ - พร้อมรับออเดอร์";
+            stat.style.background = "#27ae60";
+        } else {
+            stat.innerText = "🔴 ออฟไลน์ - กำลังพยายามเชื่อมต่อใหม่...";
+            stat.style.background = "#c0392b";
+        }
     });
 
-    // ดึงข้อมูลประวัติ
-    db.ref('history').limitToLast(30).on('value', snap => {
-        render(snap.val(), 'page-history', false);
+    // 3. ระบบดึงข้อมูลแบบ "ค้นหาอัตโนมัติ" (แก้ปัญหาข้อมูลเข้าช้า/Path ซ้อน)
+    // เราจะดึงข้อมูลจาก Root เพื่อให้มั่นใจว่าเห็นข้อมูลทุกจุด
+    db.ref().on('value', (snapshot) => {
+        const allData = snapshot.val();
+        console.log("Raw Data Updated:", allData);
+
+        let liveOrders = null;
+        let historyOrders = null;
+
+        if (allData) {
+            // วิธีที่ 1: ตรวจสอบที่ชั้นนอกสุด (ปกติ)
+            if (allData.verified_orders) liveOrders = allData.verified_orders;
+            if (allData.history) historyOrders = allData.history;
+
+            // วิธีที่ 2: ตรวจสอบเผื่อข้อมูลซ้อนอยู่ในชื่อโปรเจกต์ (ตามโครงสร้างบางแบบ)
+            const subData = allData['project-8472595372192265726'];
+            if (subData) {
+                if (subData.verified_orders) liveOrders = subData.verified_orders;
+                if (subData.history) historyOrders = subData.history;
+            }
+        }
+
+        // แสดงผล
+        render(liveOrders, 'page-live', true);
+        render(historyOrders, 'page-history', false);
+
+        // เสียงแจ้งเตือน
+        if (liveOrders) {
+            document.getElementById('bell').play().catch(() => {});
+        }
     });
 
-    // ฟังก์ชันย้ายออเดอร์เมื่อกด "เสร็จงาน"
+    // 4. ฟังก์ชันย้ายออเดอร์
     async function moveOrder(key, status) {
-        const snap = await db.ref('verified_orders/' + key).once('value');
-        const val = snap.val();
-        if(val) {
+        // ค้นหา Path ปัจจุบันของออเดอร์นี้
+        let sourcePath = 'verified_orders/' + key;
+        let snap = await db.ref(sourcePath).once('value');
+
+        // ถ้าไม่เจอชั้นนอก ลองหาในชั้นซ้อน
+        if (!snap.exists()) {
+            sourcePath = 'project-8472595372192265726/verified_orders/' + key;
+            snap = await db.ref(sourcePath).once('value');
+        }
+
+        if (snap.exists()) {
+            const val = snap.val();
             val.status = status;
+            val.finishedAt = new Date().toLocaleString();
+            
+            // ส่งไปประวัติ และ ลบออกจากรายการสด
             await db.ref('history').push(val);
-            await db.ref('verified_orders/' + key).remove();
+            await db.ref(sourcePath).remove();
+        } else {
+            alert("ไม่พบข้อมูลออเดอร์นี้ อาจถูกดำเนินการไปแล้ว");
         }
     }
 
-    // ฟังก์ชัน Render แสดงผลการ์ดออเดอร์ (ใช้ของเดิมที่พี่ชอบได้เลย)
+    // 5. ฟังก์ชันสร้างการ์ดออเดอร์
     function render(data, targetId, isLive) {
         const div = document.getElementById(targetId);
-        if(!data) { div.innerHTML = "<p style='text-align:center;'>ไม่มีออเดอร์</p>"; return; }
+        if (!data || Object.keys(data).length === 0) { 
+            div.innerHTML = `<p style="grid-column:1/-1; text-align:center; opacity:0.5; margin-top:50px;">
+                ${isLive ? 'ไม่มีออเดอร์ใหม่ในขณะนี้' : 'ยังไม่มีประวัติการทำรายการ'}
+            </p>`; 
+            return; 
+        }
         
         let html = "";
-        Object.keys(data).reverse().forEach(key => {
+        const keys = Object.keys(data).reverse(); // เอาอันใหม่ขึ้นก่อน
+        keys.forEach(key => {
             const o = data[key];
+            let itemsHtml = "";
+            if (o.items) {
+                for (let item in o.items) {
+                    if (o.items[item] > 0) itemsHtml += `• ${item} x ${o.items[item]}<br>`;
+                }
+            }
+
             html += `
-                <div class="card">
-                    <b>คุณ:</b> ${o.customer || 'ลูกค้า'}<br>
-                    <b>ยอด:</b> ${o.total_price || 0} บาท<br>
-                    ${isLive ? `<button onclick="moveOrder('${key}', 'completed')">เสร็จงาน</button>` : ''}
+                <div class="card" style="${!isLive ? 'border-left-color:#ccc; opacity:0.8;' : ''}">
+                    <div style="font-weight:600; font-size:1.1rem; color:var(--p);">คุณ ${o.customer || 'ลูกค้า'}</div>
+                    <div style="font-size:0.9rem; color:var(--s); font-weight:600;">📞 ${o.tel || '-'}</div>
+                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                    <div style="font-size:0.95rem; line-height:1.5;">${itemsHtml || 'ไม่มีรายการอาหาร'}</div>
+                    <div style="font-size:0.85rem; color:#666; margin-top:5px; border-top: 1px dashed #eee; padding-top:5px;">
+                        📝 หมายเหตุ: ${o.cooking_instruction || '-'}
+                    </div>
+                    <div style="text-align:right; font-weight:600; color:var(--p); margin-top:10px; font-size:1.2rem;">
+                        ${Number(o.total_price || 0).toLocaleString()} บาท
+                    </div>
+                    ${isLive ? `
+                        <button class="btn btn-done" onclick="moveOrder('${key}', 'completed')">✔️ เสร็จงาน / เก็บประวัติ</button>
+                        <button class="btn btn-cancel" onclick="moveOrder('${key}', 'cancelled')">❌ ยกเลิก</button>
+                    ` : `
+                        <div style="text-align:center; color:#999; font-size:0.8rem; margin-top:10px; background:#f9f9f9; padding:5px; border-radius:5px;">
+                            สถานะ: ${o.status === 'completed' ? 'สำเร็จ' : 'ยกเลิก'}
+                        </div>
+                    `}
                 </div>`;
         });
         div.innerHTML = html;
     }
+
+    // 6. ฟังก์ชันสลับหน้า
+    function changePage(p) {
+        document.getElementById('page-live').style.display = p === 'live' ? 'grid' : 'none';
+        document.getElementById('page-history').style.display = p === 'history' ? 'grid' : 'none';
+        document.getElementById('nav-live').classList.toggle('active', p === 'live');
+        document.getElementById('nav-history').classList.toggle('active', p === 'history');
+    }
 </script>
+
 </body>
 </html>
