@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet Admin - Ultra Fast</title>
+    <title>Nature Gourmet Admin - Super Sonic</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -15,7 +15,7 @@
         
         /* ปุ่มเบอร์ฉุกเฉิน */
         .emergency-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .btn-ems { flex: 1; padding: 10px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 0.9rem; }
+        .btn-ems { flex: 1; padding: 12px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; font-size: 1rem; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
         .police { background: #2c3e50; } .ambulance { background: #c0392b; } .fire { background: #d35400; }
 
         .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
@@ -23,54 +23,53 @@
         .order-card { 
             background: white; border-radius: 20px; padding: 20px; 
             box-shadow: 0 8px 15px rgba(0,0,0,0.3); position: relative;
-            border-left: 8px solid #e67e22; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-left: 10px solid #e67e22; animation: slideIn 0.2s ease-out;
         }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         
         .status-tag { position: absolute; top: 15px; right: 15px; background: #2d5a27; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; }
-        .cust-name { font-size: 1.3rem; color: #1a3c15; font-weight: 600; margin-bottom: 5px; }
-        .cust-tel { color: #e67e22; font-weight: bold; font-size: 1.1rem; text-decoration: none; }
+        .cust-name { font-size: 1.4rem; color: #1a3c15; font-weight: 600; }
+        .cust-tel { color: #e67e22; font-weight: bold; font-size: 1.2rem; text-decoration: underline; }
         
-        .item-box { background: #f0f4ef; padding: 15px; border-radius: 15px; margin: 15px 0; border: 1px solid #ddd; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .qty-badge { background: #2d5a27; color: white; padding: 2px 10px; border-radius: 10px; font-weight: bold; }
+        .item-box { background: #f9fdf9; padding: 15px; border-radius: 15px; margin: 15px 0; border: 2px solid #eee; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.2rem; border-bottom: 1px dashed #ccc; padding-bottom: 5px; }
+        .qty-badge { background: #1a3c15; color: #fff; padding: 2px 12px; border-radius: 8px; font-weight: bold; }
 
-        .btn-done { background: #27ae60; color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 1.1rem; cursor: pointer; font-weight: 600; margin-top: 10px; }
-        .btn-done:hover { background: #2ecc71; }
+        .btn-done { background: #27ae60; color: white; border: none; width: 100%; padding: 18px; border-radius: 15px; font-size: 1.2rem; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-done:active { transform: scale(0.95); background: #219150; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2>Nature Gourmet - ระบบจัดการออเดอร์ 👩‍🍳</h2>
+        <h1>ออเดอร์ใหม่ (โหมดความเร็วสูง) ⚡</h1>
     </div>
 
-    <!-- ปุ่มเบอร์ฉุกเฉิน -->
     <div class="emergency-bar">
-        <a href="tel:191" class="btn-ems police">📞 ตำรวจ (191)</a>
-        <a href="tel:1669" class="btn-ems ambulance">🚑 กู้ชีพ (1669)</a>
-        <a href="tel:199" class="btn-ems fire">🚒 ดับเพลิง (199)</a>
+        <a href="tel:191" class="btn-ems police">🚓 ตำรวจ 191</a>
+        <a href="tel:1669" class="btn-ems ambulance">🚑 กู้ชีพ 1669</a>
+        <a href="tel:199" class="btn-ems fire">🚒 ดับเพลิง 199</a>
     </div>
 
     <div class="order-grid" id="order-display">
-        <div style="color: white; text-align: center; grid-column: 1/-1;">กำลังโหลดออเดอร์...</div>
+        <!-- ออเดอร์จะเด้งเข้าตรงนี้ทันที -->
     </div>
 
-    <!-- เสียงติ๊ง -->
     <audio id="ding-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-    // [1] Mapping ชื่อเมนู (พี่แก้ชื่อเมนูให้ตรงกับ ID ในหน้าสั่งนะครับ)
+    // [1] Mapping ชื่อเมนู (ใส่ให้ตรงกับหน้าสั่งนะพี่)
     const menuMapping = {
-        'f1': 'ข้าวผัดกะเพรา',
-        'f2': 'ข้าวผัดหมู/ไก่',
-        'f3': 'ราดหน้ายอดผัก',
-        'i1': 'น้ำอัดลม',
-        'i2': 'น้ำเปล่าแช่เย็น'
-        // เพิ่มเมนูอื่นๆ ตาม ID ที่พี่ตั้งไว้ได้เลย
+        'f1': 'กะเพราหมูกรอบ',
+        'f2': 'ข้าวผัดต้มยำ',
+        'f3': 'ผัดไทยกุ้งสด',
+        'i1': 'ผักชี (พิเศษ)',
+        'i2': 'พริกสด',
+        'i3': 'ไข่ดาว',
+        'i4': 'ไข่เจียว'
     };
 
-    // [2] Firebase Config (ใส่ของพี่เลย)
+    // [2] Firebase Config (แก้เป็นของพี่นะ)
     const firebaseConfig = {
         apiKey: "AIza...",
         databaseURL: "https://your-db-url.asia-southeast1.firebasedatabase.app", 
@@ -82,85 +81,94 @@
     const orderDisplay = document.getElementById('order-display');
     const dingSound = document.getElementById('ding-sound');
 
-    // ฟังก์ชันพูดเสียงหวาน
+    // เสียงผู้หญิงพูด (หวานและเร็ว)
     function speakCancel() {
-        const msg = new SpeechSynthesisUtterance();
-        msg.text = "มีคนยกเลิกออเดอร์ค่ะ";
+        const msg = new SpeechSynthesisUtterance("มีคนยกเลิกออเดอร์ค่ะ");
         msg.lang = 'th-TH';
-        msg.rate = 1.1; // ความเร็วปกติ
-        msg.pitch = 1.2; // เสียงหวานใส
+        msg.rate = 1.1; 
+        msg.pitch = 1.2;
         window.speechSynthesis.speak(msg);
     }
 
-    // [3] ดึงข้อมูล Real-time
-    db.ref('orders').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (!data) {
-            orderDisplay.innerHTML = `<div style="color: white; text-align: center; grid-column: 1/-1; padding: 50px;">ยังไม่มีออเดอร์ค้างค่ะ 😇</div>`;
-            return;
+    // [3] เทคนิคการโหลดแบบ "ทันที" (Child Added)
+    // วิธีนี้จะเร็วกว่า 'on value' เพราะมันจะไม่รอให้โหลดครบทุกอันถึงค่อยแสดงผล
+    let initialDataLoaded = false;
+
+    db.ref('orders').on('child_added', (snapshot) => {
+        const key = snapshot.key;
+        const order = snapshot.val();
+        renderOrderCard(key, order, true); // วาดการ์ดใหม่ไว้บนสุด
+
+        if (initialDataLoaded) {
+            dingSound.play().catch(() => {}); // เสียงติ๊ง
         }
+    });
 
-        orderDisplay.innerHTML = "";
-        const keys = Object.keys(data).reverse();
+    db.ref('orders').on('child_removed', (snapshot) => {
+        const card = document.getElementById(`card-${snapshot.key}`);
+        if (card) {
+            card.remove();
+            speakCancel(); // เสียงแจ้งเตือนยกเลิก
+        }
+    });
 
-        keys.forEach(key => {
-            const order = data[key];
-            let itemsHtml = "";
-            
-            for (let id in order.items) {
-                if (order.items[id] > 0) {
-                    const itemName = menuMapping[id] || id; // ถ้าหาชื่อไม่เจอให้โชว์ ID แทน
-                    itemsHtml += `
-                        <div class="item-row">
-                            <span>${itemName}</span>
-                            <span class="qty-badge">${order.items[id]} จาน/ขวด</span>
-                        </div>`;
-                }
+    // ตรวจสอบว่าโหลดครั้งแรกเสร็จหรือยัง (เพื่อไม่ให้เสียงดังรัวๆ ตอนเปิดหน้า)
+    db.ref('orders').once('value', () => {
+        initialDataLoaded = true;
+        if (orderDisplay.innerHTML === "") {
+            orderDisplay.innerHTML = `<div id="empty-msg" style="color: white; text-align: center; grid-column: 1/-1; padding: 50px;">ไม่มีออเดอร์ค้างค่ะ 😇</div>`;
+        }
+    });
+
+    function renderOrderCard(key, order, isNew = false) {
+        // ลบข้อความ "ไม่มีออเดอร์" ออกถ้ามีการ์ดใหม่เข้า
+        const emptyMsg = document.getElementById('empty-msg');
+        if (emptyMsg) emptyMsg.remove();
+
+        const date = new Date(order.timestamp).toLocaleTimeString('th-TH');
+        let itemsHtml = "";
+        
+        for (let id in order.items) {
+            if (order.items[id] > 0) {
+                const name = menuMapping[id] || id;
+                itemsHtml += `
+                    <div class="item-row">
+                        <span>${name}</span>
+                        <span class="qty-badge">${order.items[id]}</span>
+                    </div>`;
             }
+        }
 
-            const card = `
-                <div class="order-card">
-                    <div class="status-tag">${order.payment_type === 'scan' ? 'โอนเงิน' : 'เงินสด'}</div>
-                    <div class="cust-name">👤 คุณ ${order.customer}</div>
-                    <a href="tel:${order.tel}" class="cust-tel">📞 โทร: ${order.tel}</a>
-                    
-                    <div class="item-box">
-                        ${itemsHtml}
-                        <div style="color: #666; font-size: 0.9rem; margin-top: 10px;">
-                            📝 <strong>หมายเหตุ:</strong> ${order.cooking_instruction || '-'}
-                        </div>
+        const cardHtml = `
+            <div class="order-card" id="card-${key}">
+                <div class="status-tag">${order.payment_type === 'scan' ? '📱 โอนเงิน' : '💵 เงินสด'}</div>
+                <div class="cust-name">คุณ ${order.customer}</div>
+                <a href="tel:${order.tel}" class="cust-tel">📞 ${order.tel}</a>
+                
+                <div class="item-box">
+                    ${itemsHtml}
+                    <div style="color: #e67e22; font-size: 0.95rem; margin-top: 10px; font-weight: bold;">
+                        📌 โน้ต: ${order.cooking_instruction || '-'}
                     </div>
-                    
-                    <div style="text-align: right; font-size: 1.2rem; font-weight: bold; color: #2d5a27;">
-                        รวมทั้งสิ้น: ${order.total_price}
-                    </div>
-                    
-                    <button class="btn-done" onclick="finishOrder('${key}')">✅ ทำเสร็จแล้ว</button>
                 </div>
-            `;
-            orderDisplay.innerHTML += card;
-        });
-    });
+                
+                <div style="text-align: right; font-size: 1.3rem; font-weight: bold; color: #1a3c15;">
+                    ยอดสุทธิ: ${order.total_price}
+                </div>
+                
+                <button class="btn-done" onclick="finishOrder('${key}')">✅ ทำเสร็จแล้ว</button>
+            </div>
+        `;
 
-    // [4] ระบบเสียงแจ้งเตือน
-    let initialLoad = true;
-    db.ref('orders').on('child_added', () => {
-        if (!initialLoad) {
-            dingSound.play().catch(() => {});
+        if (isNew) {
+            orderDisplay.insertAdjacentHTML('afterbegin', cardHtml); // เอาไว้บนสุด
+        } else {
+            orderDisplay.innerHTML += cardHtml;
         }
-    });
-
-    db.ref('orders').on('child_removed', () => {
-        if (!initialLoad) {
-            speakCancel();
-        }
-    });
-
-    // ปลดล็อกเสียงหลังเปิดหน้าเว็บครั้งแรก
-    db.ref('orders').once('value', () => { initialLoad = false; });
+    }
 
     function finishOrder(key) {
-        if (confirm("ยืนยันการปิดออเดอร์?")) {
+        if (confirm("ทำออเดอร์นี้เสร็จแล้วใช่ไหมคะ?")) {
             db.ref('orders/' + key).remove();
         }
     }
