@@ -2,94 +2,167 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Nature Gourmet Admin - LIGHT SPEED ⚡</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    <title>Nature Gourmet Admin - Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; background: #0e230c; margin: 0; padding: 15px; color: #fff; }
-        .header { text-align: center; border-bottom: 2px solid #27ae60; padding-bottom: 10px; margin-bottom: 15px; }
-        .order-card { background: white; color: #333; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 10px solid #e67e22; animation: flash 0.5s; }
-        @keyframes flash { from { background: #ffeaa7; } to { background: white; } }
-        .cust-tel { color: #d35400; font-weight: bold; font-size: 1.2rem; }
-        .item-box { background: #f1f2f6; padding: 10px; border-radius: 10px; margin: 10px 0; }
-        .btn-done { background: #27ae60; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
-        .emergency { display: flex; gap: 5px; margin-bottom: 15px; }
-        .emergency a { flex: 1; text-align: center; padding: 10px; border-radius: 8px; color: white; text-decoration: none; font-size: 0.8rem; }
+        :root {
+            --primary: #2d5a27;
+            --accent: #e67e22;
+            --bg: #f4f7f1;
+            --card-bg: #ffffff;
+        }
+        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
+        
+        /* Header & Emergency */
+        .top-bar { background: var(--primary); padding: 20px; border-radius: 0 0 30px 30px; margin: -10px -10px 20px -10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .emergency-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .ems-btn { text-decoration: none; color: white; padding: 10px; border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 600; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2); }
+        
+        /* Order Cards */
+        .order-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 15px; }
+        .card { 
+            background: var(--card-bg); border-radius: 24px; padding: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03);
+            position: relative; overflow: hidden; animation: popUp 0.3s ease-out;
+        }
+        @keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        .card::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 8px; background: var(--accent); }
+        
+        .cust-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .cust-name { font-size: 1.25rem; font-weight: 600; color: var(--primary); margin: 0; }
+        .pay-tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: #eee; font-weight: 600; }
+        
+        .phone-link { color: var(--accent); font-weight: 600; font-size: 1.1rem; text-decoration: none; display: block; margin-bottom: 10px; }
+        
+        .menu-list { background: #f9fbf8; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #edf2ec; }
+        .menu-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ddd; }
+        .menu-item:last-child { border: none; }
+        .qty { color: var(--primary); font-weight: 600; }
+
+        .btn-finish { 
+            background: var(--primary); color: white; border: none; width: 100%; 
+            padding: 16px; border-radius: 16px; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(45, 90, 39, 0.3);
+        }
+        .btn-finish:active { transform: scale(0.98); }
+        
+        #loading { text-align: center; padding: 50px; color: var(--primary); font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>ออเดอร์เข้าใหม่วันนี้ 👩‍🍳</h1>
-        <small id="status">🔴 กำลังเชื่อมต่อสายตรง...</small>
+    <div class="top-bar">
+        <h2 style="color: white; margin: 0; text-align: center;">Nature Gourmet Admin 👩‍🍳</h2>
+        <div class="emergency-grid">
+            <a href="tel:191" class="ems-btn" style="background: #34495e;">🚑 191</a>
+            <a href="tel:1669" class="ems-btn" style="background: #e74c3c;">🚑 1669</a>
+            <a href="tel:199" class="ems-btn" style="background: #d35400;">🚒 199</a>
+        </div>
     </div>
 
-    <div class="emergency">
-        <a href="tel:191" style="background:#2c3e50">ตำรวจ</a>
-        <a href="tel:1669" style="background:#c0392b">กู้ชีพ</a>
-        <a href="tel:199" style="background:#d35400">ดับเพลิง</a>
+    <div id="order-container" class="order-container">
+        <div id="loading">🚀 กำลังเชื่อมต่อสายตรง...</div>
     </div>
 
-    <div id="order-display"></div>
+    <!-- เสียงแจ้งเตือน -->
+    <audio id="sound-in" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
-    <script>
-        // *** แก้ตรงนี้ให้เป็น URL ของพี่นะ ***
-        const DB_URL = "https://project-8472595372192265726-default-rtdb.asia-southeast1.firebasedatabase.app",
-        const DELETE_BASE_URL = "https://project-8472595372192265726-default-rtdb.asia-southeast1.firebasedatabase.app",
+<script>
+    // [1] ตั้งค่า URL (ก๊อปมาวางเลยพี่)
+    const DB_URL = "https://your-db-url.asia-southeast1.firebasedatabase.app/orders.json";
+    const DELETE_BASE = "https://your-db-url.asia-southeast1.firebasedatabase.app/orders/";
 
-        const menuMap = { 'f1':'กะเพรา', 'f2':'ข้าวผัด', 'f3':'ราดหน้า', 'i1':'น้ำเปล่า', 'i2':'น้ำอัดลม' };
+    // [2] แมพชื่อเมนู
+    const menuMap = { 'f1':'กะเพรา', 'f2':'ข้าวผัด', 'f3':'ราดหน้า', 'i1':'น้ำเปล่า', 'i2':'น้ำอัดลม' };
 
-        // ฟังก์ชันลบออเดอร์
-        async function finishOrder(key) {
-            if(!confirm("เสร็จแล้วนะ?")) return;
-            await fetch(`${DELETE_BASE_URL}${key}.json`, { method: 'DELETE' });
-            loadOrders(); // โหลดใหม่ทันที
-        }
+    let lastDataKeys = [];
+    const container = document.getElementById('order-container');
+    const soundIn = document.getElementById('sound-in');
 
-        // ฟังก์ชันอ่านข้อมูล (สายตรง ไม่ผ่าน Library)
-        async function loadOrders() {
-            try {
-                const res = await fetch(DB_URL);
-                const data = await res.json();
-                const display = document.getElementById('order-display');
-                document.getElementById('status').innerText = "🟢 เชื่อมต่อเสถียร (Auto-Refresh)";
-                
-                if (!data) {
-                    display.innerHTML = "<p style='text-align:center'>ยังไม่มีออเดอร์ใหม่ครับ</p>";
-                    return;
-                }
+    // เสียงคนพูดภาษาไทย (หวานๆ)
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'th-TH';
+        msg.rate = 1.0;
+        msg.pitch = 1.2;
+        window.speechSynthesis.speak(msg);
+    }
 
-                let html = "";
-                // เรียงจากใหม่ไปเก่า
-                const keys = Object.keys(data).reverse();
-                
-                keys.forEach(key => {
-                    const o = data[key];
-                    let items = "";
-                    for(let id in o.items) {
-                        if(o.items[id] > 0) items += `<div>• ${menuMap[id] || id} x ${o.items[id]}</div>`;
-                    }
-
-                    html += `
-                        <div class="order-card">
-                            <div style="font-size:1.3rem"><strong>คุณ ${o.customer}</strong></div>
-                            <a href="tel:${o.tel}" class="cust-tel">📞 ${o.tel}</a>
-                            <div class="item-box">${items}</div>
-                            <div style="color:#e67e22">📌 Note: ${o.cooking_instruction || '-'}</div>
-                            <h3 style="text-align:right; margin:10px 0;">รวม ${o.total_price}</h3>
-                            <button class="btn-done" onclick="finishOrder('${key}')">เสร็จงาน/ลบ</button>
-                        </div>
-                    `;
-                });
-                display.innerHTML = html;
-            } catch (e) {
-                document.getElementById('status').innerText = "🔴 เน็ตหลุดหรือ URL ผิด";
+    async function fetchOrders() {
+        try {
+            const res = await fetch(DB_URL);
+            const data = await res.json();
+            
+            if (!data) {
+                container.innerHTML = '<div id="loading">รอออเดอร์ใหม่... 🍵</div>';
+                lastDataKeys = [];
+                return;
             }
-        }
 
-        // ตั้งเวลาเช็กออเดอร์ทุกๆ 2 วินาที (กดปุ๊บ มาปั๊บของจริง)
-        setInterval(loadOrders, 2000);
-        loadOrders();
-    </script>
+            const currentKeys = Object.keys(data);
+            
+            // เช็คว่ามีออเดอร์ใหม่ไหม (ติ๊ง!)
+            if (currentKeys.length > lastDataKeys.length && lastDataKeys.length !== 0) {
+                soundIn.play().catch(() => {});
+            }
+            
+            // เช็คว่าโดนลบไหม (พูด!)
+            if (currentKeys.length < lastDataKeys.length) {
+                speak("มีคนยกเลิกออเดอร์ค่ะ");
+            }
+
+            lastDataKeys = currentKeys;
+            render(data);
+        } catch (e) { console.log("Error:", e); }
+    }
+
+    function render(data) {
+        let html = "";
+        const keys = Object.keys(data).reverse();
+        
+        keys.forEach(key => {
+            const o = data[key];
+            let itemsHtml = "";
+            for(let id in o.items) {
+                if(o.items[id] > 0) {
+                    itemsHtml += `<div class="menu-item"><span>${menuMap[id] || id}</span><span class="qty">${o.items[id]} จาน</span></div>`;
+                }
+            }
+
+            html += `
+                <div class="card" id="${key}">
+                    <div class="cust-header">
+                        <p class="cust-name">คุณ ${o.customer}</p>
+                        <span class="pay-tag">${o.payment_type === 'scan' ? '💳 โอน' : '💵 เงินสด'}</span>
+                    </div>
+                    <a href="tel:${o.tel}" class="phone-link">📞 ${o.tel}</a>
+                    <div class="menu-list">${itemsHtml}</div>
+                    <p style="font-size: 0.9rem; color: #666;">📝 ${o.cooking_instruction || '-'}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <span style="font-weight: 600;">รวม: <span style="color:var(--primary); font-size:1.4rem;">${o.total_price}</span></span>
+                        <button class="btn-finish" onclick="finish('${key}')" style="width: auto; padding: 10px 25px;">เสร็จ</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    async function finish(key) {
+        const btn = event.target;
+        btn.innerText = "ลบ...";
+        await fetch(`${DELETE_BASE}${key}.json`, { method: 'DELETE' });
+        fetchOrders();
+    }
+
+    // รันทุก 2 วินาที (สายตรง ไม่โหลด Library นาน)
+    setInterval(fetchOrders, 2000);
+    fetchOrders();
+    
+    // คลิกที่ไหนก็ได้หนึ่งครั้งเพื่อเปิดระบบเสียง
+    document.body.onclick = () => { console.log("Audio Enabled"); };
+</script>
 </body>
 </html>
