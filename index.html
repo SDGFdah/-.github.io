@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet Admin - Official</title>
+    <title>Nature Gourmet Admin (Official)</title>
     
     <!-- โหลด Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -13,54 +13,74 @@
     
     <style>
         :root { --p: #2d5a27; --s: #e67e22; --bg: #f4f7f1; }
-        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; }
+        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; transition: background 0.3s; }
+        
+        /* Header */
         header { background: var(--p); color: white; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .status-bar { font-size: 0.8rem; padding: 5px; background: rgba(0,0,0,0.2); transition: 0.3s; }
-        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
-        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #888; }
+        
+        /* Navigation เมนูที่พี่ขอคืน */
+        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #888; transition: 0.3s; }
         .nav-item.active { color: var(--p); border-bottom: 4px solid var(--p); background: #f9f9f9; }
+        
+        /* Layout */
         .container { padding: 20px; max-width: 1200px; margin: auto; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        
+        /* Card Style */
         .card { 
             background: white; border-radius: 20px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-            border-left: 10px solid var(--s); position: relative; margin-bottom: 10px;
+            border-left: 10px solid var(--s); position: relative; margin-bottom: 10px; animation: slideIn 0.3s ease;
         }
-        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
-        .btn-done { background: var(--p); color: white; }
-        .btn-done:hover { background: #1e3d1a; }
-        .price { text-align: right; font-weight: 600; color: var(--p); font-size: 1.2rem; margin-top: 10px; }
-        .item-list { font-size: 0.9rem; color: #444; line-height: 1.6; }
+        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .card-history { border-left-color: #ccc; opacity: 0.85; }
+        
+        /* Elements */
+        .customer-name { font-weight: 600; font-size: 1.1rem; color: var(--p); }
+        .tel { font-size: 0.9rem; color: var(--s); font-weight: 600; margin-bottom: 10px; }
+        .items { font-size: 0.95rem; line-height: 1.6; color: #444; border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }
+        .note { font-size: 0.85rem; color: #777; background: #fef3e2; padding: 8px; border-radius: 8px; margin-top: 10px; border-left: 3px solid var(--s); }
+        .total { text-align: right; font-weight: 600; color: var(--p); font-size: 1.3rem; margin: 15px 0; }
+        
+        .btn { border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; transition: 0.2s; font-family: 'Kanit'; }
+        .btn-done { background: var(--p); color: white; box-shadow: 0 4px 10px rgba(45, 90, 39, 0.2); }
+        .btn-done:active { transform: scale(0.98); background: #1e3d1a; }
+        
+        .time-badge { font-size: 0.75rem; color: #aaa; text-align: center; display: block; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1 style="margin:0; font-size: 1.5rem;">NATURE GOURMET ADMIN</h1>
-    <div id="net-status" class="status-bar">⚪ กำลังเชื่อมต่อ...</div>
+    <h1 style="margin:0; font-size: 1.5rem; letter-spacing: 1px;">NATURE GOURMET ADMIN</h1>
+    <div id="net-status" class="status-bar">⚪ กำลังตรวจสอบการเชื่อมต่อ...</div>
 </header>
 
+<!-- Navigation Menu -->
 <div class="nav">
     <div class="nav-item active" id="nav-live" onclick="changePage('live')">ออเดอร์ใหม่</div>
-    <div class="nav-item" id="nav-history" onclick="changePage('history')">ประวัติงาน</div>
+    <div class="nav-item" id="nav-history" onclick="changePage('history')">ประวัติการสั่งซื้อ</div>
 </div>
 
 <div class="container">
-    <!-- หน้าออเดอร์ปัจจุบัน -->
+    <!-- หน้าออเดอร์ใหม่ -->
     <div id="page-live" class="grid">
-        <p style="text-align:center; grid-column:1/-1; margin-top:50px; opacity:0.5;">กำลังโหลดข้อมูลจาก verified_orders...</p>
+        <p style="text-align:center; grid-column:1/-1; margin-top:50px; opacity:0.5;">กำลังรอออเดอร์ใหม่เข้ามา...</p>
     </div>
     
     <!-- หน้าประวัติ -->
     <div id="page-history" style="display:none;" class="grid">
-        <p style="text-align:center; grid-column:1/-1; margin-top:50px; opacity:0.5;">กำลังโหลดประวัติ...</p>
+        <p style="text-align:center; grid-column:1/-1; margin-top:50px; opacity:0.5;">ยังไม่มีข้อมูลประวัติ...</p>
     </div>
 </div>
 
-<!-- เสียงแจ้งเตือน -->
+<!-- เสียงกระดิ่งแจ้งเตือน -->
 <audio id="bell" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-    // การตั้งค่า Firebase
+    // 1. Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyARQ9iDSAP-HSnZlHH854p1qnUPCmjtyvo",
         authDomain: "project-8472595372192265726.firebaseapp.com",
@@ -73,81 +93,100 @@
 
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
+    let lastOrderCount = 0;
 
-    // เช็คสถานะเน็ต
-    db.ref(".info/connected").on("value", snap => {
+    // 2. ตรวจสอบสถานะ Online
+    db.ref(".info/connected").on("value", (snap) => {
         const stat = document.getElementById('net-status');
         if (snap.val() === true) {
-            stat.innerText = "🟢 ออนไลน์ - เชื่อมต่อ verified_orders สำเร็จ";
+            stat.innerText = "🟢 ออนไลน์ - พร้อมรับออเดอร์ล่าสุด";
             stat.style.background = "#27ae60";
         } else {
-            stat.innerText = "🔴 ออฟไลน์ - กรุณาเช็คอินเทอร์เน็ต";
+            stat.innerText = "🔴 ขาดการติดต่อ - กำลังพยายามเชื่อมต่อใหม่...";
             stat.style.background = "#c0392b";
         }
     });
 
-    // ดึงออเดอร์ใหม่ (Live)
+    // 3. ฟังออเดอร์จาก verified_orders
     db.ref('verified_orders').on('value', snap => {
-        renderOrders(snap.val(), 'page-live', true);
-        if(snap.val()) { document.getElementById('bell').play().catch(()=>{}); }
+        const data = snap.val();
+        render(data, 'page-live', true);
+        
+        // แจ้งเตือนเสียงเฉพาะเมื่อมีออเดอร์เพิ่มขึ้น
+        if(data) {
+            const currentCount = Object.keys(data).length;
+            if(currentCount > lastOrderCount) {
+                document.getElementById('bell').play().catch(()=>{});
+            }
+            lastOrderCount = currentCount;
+        } else {
+            lastOrderCount = 0;
+        }
     });
 
-    // ดึงประวัติ (History)
+    // 4. ฟังข้อมูลประวัติ
     db.ref('history').limitToLast(20).on('value', snap => {
-        renderOrders(snap.val(), 'page-history', false);
+        render(snap.val(), 'page-history', false);
     });
 
-    // ฟังก์ชันย้ายข้อมูล (เสร็จงาน)
-    async function moveOrder(key) {
+    // 5. ฟังก์ชันย้ายไปประวัติ
+    async function completeOrder(key) {
         const snap = await db.ref('verified_orders/' + key).once('value');
-        if(snap.exists()){
-            const data = snap.val();
-            data.completedAt = new Date().toLocaleString();
-            // ย้ายไป history ก่อนแล้วค่อยลบจาก verified_orders
-            await db.ref('history').push(data);
+        if(snap.exists()) {
+            const orderData = snap.val();
+            orderData.finishedAt = new Date().toLocaleString('th-TH');
+            
+            await db.ref('history').push(orderData);
             await db.ref('verified_orders/' + key).remove();
         }
     }
 
-    // ฟังก์ชันวาดการ์ดออเดอร์
-    function renderOrders(data, targetId, isLive) {
-        const div = document.getElementById(targetId);
-        if(!data) { 
-            div.innerHTML = "<p style='grid-column:1/-1; text-align:center; opacity:0.5; margin-top:50px;'>ไม่มีข้อมูลในส่วนนี้</p>"; 
-            return; 
+    // 6. ฟังก์ชันแสดงผลบนหน้าจอ
+    function render(data, targetId, isLive) {
+        const container = document.getElementById(targetId);
+        if(!data) {
+            container.innerHTML = `<p style="grid-column:1/-1; text-align:center; opacity:0.5; margin-top:50px;">
+                ${isLive ? 'ไม่มีออเดอร์ใหม่' : 'ไม่มีประวัติรายการ'}
+            </p>`;
+            return;
         }
-        
+
         let html = "";
         const keys = Object.keys(data).reverse(); // เอาล่าสุดขึ้นก่อน
-        
+
         keys.forEach(key => {
             const o = data[key];
-            let itemsHtml = "";
+            let itemsText = "";
             if(o.items) {
                 for(let name in o.items) {
-                    if(o.items[name] > 0) itemsHtml += `• ${name} x ${o.items[name]}<br>`;
+                    if(o.items[name] > 0) itemsText += `• ${name} x ${o.items[name]}<br>`;
                 }
             }
 
             html += `
-                <div class="card" style="${!isLive ? 'border-left-color:#ccc; opacity:0.7;' : ''}">
-                    <div style="font-weight:600; font-size:1.1rem; color:var(--p);">คุณ ${o.customer || 'ไม่ระบุชื่อ'}</div>
-                    <div style="font-size:0.85rem; color:#666;">📞 ${o.tel || '-'}</div>
-                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                    <div class="item-list">${itemsHtml || 'ไม่มีรายการอาหาร'}</div>
-                    <div style="font-size:0.8rem; color:#888; margin-top:5px;">📝 ${o.cooking_instruction || '-'}</div>
-                    <div class="price">${Number(o.total_price).toLocaleString()} บาท</div>
-                    ${isLive ? `<button class="btn btn-done" onclick="moveOrder('${key}')">✔️ เสร็จงาน / เก็บประวัติ</button>` : `<div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#999;">เสร็จสิ้นเมื่อ: ${o.completedAt || '-'}</div>`}
+                <div class="card ${!isLive ? 'card-history' : ''}">
+                    <div class="customer-name">คุณ ${o.customer || 'ลูกค้า'}</div>
+                    <div class="tel">📞 ${o.tel || '-'}</div>
+                    <div class="items">${itemsText || 'ไม่ระบุรายการ'}</div>
+                    ${o.cooking_instruction ? `<div class="note">📝 ${o.cooking_instruction}</div>` : ''}
+                    <div class="total">${Number(o.total_price || 0).toLocaleString()} บาท</div>
+                    
+                    ${isLive ? 
+                        `<button class="btn btn-done" onclick="completeOrder('${key}')">✔️ ทำเสร็จแล้ว / ย้ายไปประวัติ</button>` : 
+                        `<span class="time-badge">เสร็จเมื่อ: ${o.finishedAt || '-'}</span>`
+                    }
                 </div>`;
         });
-        div.innerHTML = html;
+        container.innerHTML = html;
     }
 
-    function changePage(p) {
-        document.getElementById('page-live').style.display = p === 'live' ? 'grid' : 'none';
-        document.getElementById('page-history').style.display = p === 'history' ? 'grid' : 'none';
-        document.getElementById('nav-live').classList.toggle('active', p === 'live');
-        document.getElementById('nav-history').classList.toggle('active', p === 'history');
+    // 7. สลับหน้าเมนู
+    function changePage(page) {
+        document.getElementById('page-live').style.display = page === 'live' ? 'grid' : 'none';
+        document.getElementById('page-history').style.display = page === 'history' ? 'grid' : 'none';
+        
+        document.getElementById('nav-live').classList.toggle('active', page === 'live');
+        document.getElementById('nav-history').classList.toggle('active', page === 'history');
     }
 </script>
 
