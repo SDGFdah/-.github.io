@@ -3,201 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet - Custom Admin</title>
+    <title>Nature Gourmet - Dashboard</title>
     
+    <!-- ดึงไฟล์เชื่อมต่อพื้นฐาน -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        :root { --p: #2d5a27; --s: #e67e22; --bg: #f4f7f1; }
+        :root { --main: #2d5a27; --gold: #e67e22; --bg: #f4f7f1; }
         body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; transition: 0.5s; }
         
-        header { background: var(--p); color: white; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
-        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #888; transition: 0.3s; }
-        .nav-item.active { color: var(--p); border-bottom: 4px solid var(--p); background: #f9f9f9; }
+        /* Navigation */
+        .nav-bar { display: flex; background: #fff; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #999; border-bottom: 3px solid transparent; }
+        .nav-tab.active { color: var(--main); border-bottom-color: var(--main); background: #f9f9f9; }
 
-        .container { padding: 20px; max-width: 1200px; margin: auto; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        /* Container & Cards */
+        .main-content { padding: 20px; max-width: 1200px; margin: auto; }
+        .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         
-        /* Order Card */
         .card { 
-            background: white; border-radius: 25px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-            border-left: 10px solid var(--s); position: relative; animation: popIn 0.3s ease;
+            background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 8px solid var(--gold); position: relative; animation: slideUp 0.3s ease;
         }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        /* Mascot - ตกแต่งแบบลากวางได้ */
-        #my-mascot { 
-            position: fixed; bottom: 20px; right: 20px; width: 150px; 
-            z-index: 9999; cursor: move; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
+        .btn-done { background: var(--main); color: #fff; }
+        .btn-cancel { background: #fee; color: #e74c3c; font-size: 0.8rem; }
+        
+        /* Mascot Decoration */
+        #mascot-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; cursor: move; }
+        #mascot-img { width: 120px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2)); }
 
         /* Settings */
-        .settings-pane { background: white; padding: 25px; border-radius: 25px; max-width: 550px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .field { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--p); }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; }
-
-        .btn { border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-save { background: var(--p); color: white; width: 100%; margin-top: 10px; }
-        .btn-save:hover { background: #1e3d1a; }
+        .setting-box { background: #fff; padding: 25px; border-radius: 25px; max-width: 500px; margin: auto; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="file"], select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
     </style>
 </head>
-<body ondrop="drop(event)" ondragover="allowDrop(event)">
+<body ondrop="dropMascot(event)" ondragover="allowDrop(event)">
 
-<header>
-    <h1 style="margin:0">NATURE GOURMET ADMIN 👨‍🍳</h1>
-</header>
-
-<div class="nav">
-    <div class="nav-item active" onclick="showPage('live')">ออเดอร์เข้า</div>
-    <div class="nav-item" onclick="showPage('history')">ประวัติ</div>
-    <div class="nav-item" onclick="showPage('settings')">ตกแต่งร้าน</div>
+<div class="nav-bar">
+    <div class="nav-tab active" onclick="switchPage('live')">ออเดอร์ใหม่</div>
+    <div class="nav-tab" onclick="switchPage('history')">ประวัติ & สรุป</div>
+    <div class="nav-tab" onclick="switchPage('settings')">ตกแต่งหน้าจอ</div>
 </div>
 
-<div class="container">
-    <div id="page-live" class="grid"></div>
-    <div id="page-history" style="display:none;" class="grid"></div>
-    
+<div class="main-content">
+    <!-- หน้า 1: ออเดอร์ปัจจุบัน -->
+    <div id="page-live" class="order-grid">
+        <p style="text-align:center; grid-column: 1/-1;">กำลังโหลดข้อมูล...</p>
+    </div>
+
+    <!-- หน้า 2: ประวัติ -->
+    <div id="page-history" style="display:none;">
+        <h3 id="history-summary">ประวัติการสั่งซื้อ</h3>
+        <div class="order-grid" id="history-grid"></div>
+    </div>
+
+    <!-- หน้า 3: ตั้งค่า (เครื่องใครเครื่องมัน) -->
     <div id="page-settings" style="display:none;">
-        <div class="settings-pane">
-            <h3 style="margin-top:0; color:var(--p)">🎨 ตกแต่งหน้าจอของคุณ (เฉพาะเครื่องนี้)</h3>
-            
-            <div class="field">
+        <div class="setting-box">
+            <h3>🎨 ปรับแต่งหน้าจอของคุณ</h3>
+            <div class="input-group">
                 <label>สีพื้นหลัง:</label>
-                <input type="color" id="bg-color" onchange="applyLocalDecor()">
+                <input type="color" id="cfg-bg" onchange="applyDecor()">
             </div>
-
-            <div class="field">
-                <label>ใส่ลิงก์รูปจากเน็ต (URL):</label>
-                <input type="text" id="mascot-url" placeholder="วางลิงก์รูป .png หรือ .jpg ที่นี่" oninput="applyLocalDecor()">
+            <div class="input-group">
+                <label>รูปตกแต่ง (URL จากเน็ต):</label>
+                <input type="text" id="cfg-url" placeholder="วางลิงก์รูปตรงนี้" oninput="applyDecor()">
             </div>
-
-            <div class="field">
+            <div class="input-group">
                 <label>หรือ อัปโหลดรูปจากเครื่อง:</label>
-                <input type="file" id="mascot-file" accept="image/*" onchange="handleFileUpload(this)">
+                <input type="file" accept="image/*" onchange="uploadImage(this)">
             </div>
-
-            <p style="font-size: 0.8rem; color: #888;">* รูปตกแต่งสามารถคลิกลากวางตำแหน่งใดก็ได้บนหน้าจอ</p>
-            <button class="btn btn-save" onclick="saveDecor()">💾 บันทึกการตกแต่งถาวร</button>
+            <p style="font-size:0.8rem; color:#888;">* รูปตกแต่งลากวางได้อิสระ</p>
+            <button class="btn btn-done" onclick="saveConfig()">บันทึกการตกแต่งถาวร</button>
         </div>
     </div>
 </div>
 
-<!-- รูปตกแต่ง (Mascot) -->
-<img src="" id="my-mascot" draggable="true" ondragstart="drag(event)">
+<!-- ตัวมาสคอตลากวาง -->
+<div id="mascot-container" draggable="true" ondragstart="dragMascot(event)">
+    <img src="https://cdn-icons-png.flaticon.com/512/3081/3081986.png" id="mascot-img">
+</div>
 
-<audio id="ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+<audio id="alert-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-    // [1] FIREBASE CONFIG (พี่เปลี่ยนเป็นของพี่นะครับ)
-    const firebaseConfig = {
-        apiKey: "ใส่_API_KEY",
-        databaseURL: "ใส่_URL",
-        projectId: "ใส่_ID"
+    // [1] CONFIG: ใส่ข้อมูล Firebase ของพี่ตรงนี้
+    const config = {
+        databaseURL: "ใส่_URL_ฐานข้อมูล_ของพี่_ตรงนี้", 
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) { firebase.initializeApp(config); }
     const db = firebase.database();
-    const menuMap = { 'f1':'กะเพรา', 'f2':'ข้าวผัด', 'f3':'ราดหน้า', 'i1':'น้ำเปล่า', 'i2':'น้ำอัดลม' };
+    const menuNames = { 'f1':'กะเพรา', 'f2':'ข้าวผัด', 'f3':'ราดหน้า', 'i1':'น้ำเปล่า', 'i2':'น้ำอัดลม' };
 
-    // [2] ระบบลากวาง (Drag & Drop)
+    // [2] ระบบลากวางรูป
     function allowDrop(ev) { ev.preventDefault(); }
-    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
-    function drop(ev) {
+    function dragMascot(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+    function dropMascot(ev) {
         ev.preventDefault();
-        var data = ev.dataTransfer.getData("text");
-        var el = document.getElementById(data);
-        el.style.left = ev.clientX - (el.offsetWidth/2) + "px";
-        el.style.top = ev.clientY - (el.offsetHeight/2) + "px";
+        const el = document.getElementById("mascot-container");
+        el.style.left = ev.clientX - 60 + "px";
+        el.style.top = ev.clientY - 60 + "px";
         el.style.bottom = "auto"; el.style.right = "auto";
     }
 
-    // [3] ระบบตกแต่งเฉพาะเครื่อง (LocalStorage)
-    function handleFileUpload(input) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            document.getElementById('my-mascot').src = e.target.result;
-            document.getElementById('mascot-url').value = ""; // ล้างค่า URL
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function applyLocalDecor() {
-        const bg = document.getElementById('bg-color').value;
-        const url = document.getElementById('mascot-url').value;
-        document.body.style.background = bg;
-        if(url) document.getElementById('my-mascot').src = url;
-    }
-
-    function saveDecor() {
-        const decor = {
-            bg: document.getElementById('bg-color').value,
-            img: document.getElementById('my-mascot').src
-        };
-        localStorage.setItem('my_admin_decor', JSON.stringify(decor));
-        alert("บันทึกการตกแต่งเฉพาะเครื่องเรียบร้อย!");
-    }
-
-    // โหลดการตกแต่งที่เคยเซฟไว้
-    window.onload = () => {
-        const saved = localStorage.getItem('my_admin_decor');
-        if(saved) {
-            const d = JSON.parse(saved);
-            document.body.style.background = d.bg;
-            document.getElementById('my-mascot').src = d.img;
-            document.getElementById('bg-color').value = d.bg;
-        }
-    };
-
-    // [4] ระบบดึงข้อมูลออเดอร์ (เหมือนเดิมแต่เสถียรขึ้น)
-    db.ref('orders').on('value', snap => {
-        const data = snap.val();
-        render(data, 'page-live', true);
-        if(data && Object.keys(data).length > 0) document.getElementById('ding').play().catch(()=>{});
+    // [3] ดึงข้อมูลออเดอร์
+    db.ref('orders').on('value', (snapshot) => {
+        const data = snapshot.val();
+        renderOrders(data, 'page-live', true);
+        if(data) document.getElementById('alert-sound').play().catch(()=>{});
     });
 
-    db.ref('history').limitToLast(50).on('value', snap => {
-        render(snap.val(), 'page-history', false);
+    db.ref('history').limitToLast(50).on('value', (snapshot) => {
+        renderOrders(snapshot.val(), 'history-grid', false);
     });
 
-    function render(data, targetId, isLive) {
+    function renderOrders(data, targetId, isLive) {
         const container = document.getElementById(targetId);
-        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>ว่างเปล่า...</p>"; return; }
+        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:#ccc;'>ไม่มีข้อมูล</p>"; return; }
+        
         let html = "";
         Object.keys(data).reverse().forEach(key => {
             const o = data[key];
-            let items = "";
-            for(let id in o.items) if(o.items[id]>0) items += `• ${menuMap[id]||id} x ${o.items[id]}<br>`;
+            let itemsHtml = "";
+            for(let id in o.items) if(o.items[id] > 0) itemsHtml += `• ${menuNames[id] || id} x ${o.items[id]}<br>`;
             
             html += `
-            <div class="card" style="${!isLive ? 'opacity:0.7; border-left-color:#ccc;' : ''}">
-                <div style="font-weight:600; font-size:1.1rem;">คุณ ${o.customer}</div>
-                <div style="color:var(--s); font-weight:bold;">📞 ${o.tel}</div>
-                <div style="margin:10px 0; font-size:0.95rem; background:#f9f9f9; padding:10px; border-radius:10px;">${items}</div>
-                ${isLive ? `<button class="btn btn-save" onclick="done('${key}')">เสร็จงาน</button>` : `<small>${o.status === 'completed' ? '✅ สำเร็จ' : '❌ ยกเลิก'}</small>`}
-            </div>`;
+                <div class="card" style="${!isLive ? 'border-left-color:#bdc3c7; opacity:0.8;' : ''}">
+                    <div style="font-weight:600; font-size:1.1rem; color:var(--main);">คุณ ${o.customer || 'ลูกค้า'}</div>
+                    <div style="color:var(--gold); font-weight:bold;">📞 ${o.tel || '-'}</div>
+                    <div style="margin:10px 0; background:#f8f9fa; padding:10px; border-radius:12px; font-size:0.9rem;">${itemsHtml}</div>
+                    <div style="font-size:0.8rem; color:#777;">📌 ${o.cooking_instruction || '-'}</div>
+                    <div style="text-align:right; font-weight:bold; margin:5px 0;">รวม ${o.total_price || 0}</div>
+                    ${isLive ? `
+                        <button class="btn btn-done" onclick="completeOrder('${key}')">เสร็จงาน</button>
+                        <button class="btn btn-cancel" onclick="cancelOrder('${key}')">ยกเลิก</button>
+                    ` : `
+                        <div style="font-size:0.7rem; color:${o.status==='done'?'green':'red'}">${o.status==='done'?'✅ สำเร็จ':'❌ ยกเลิก'}</div>
+                    `}
+                </div>
+            `;
         });
         container.innerHTML = html;
     }
 
-    async function done(key) {
+    // [4] ฟังก์ชันปุ่มกด
+    async function completeOrder(key) {
         const snap = await db.ref('orders/' + key).once('value');
         const val = snap.val();
-        if(val) {
-            val.status = 'completed';
-            val.finishedAt = firebase.database.ServerValue.TIMESTAMP;
-            await db.ref('history').push(val);
-            await db.ref('orders/' + key).remove();
-        }
+        val.status = 'done';
+        val.finishedAt = Date.now();
+        await db.ref('history').push(val);
+        await db.ref('orders/' + key).remove();
     }
 
-    function showPage(p) {
-        document.querySelectorAll('.tab-content, .grid, #page-settings').forEach(e => e.style.display = 'none');
-        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-        document.getElementById('page-' + p).style.display = p === 'settings' ? 'block' : 'grid';
+    async function cancelOrder(key) {
+        if(!confirm("ยกเลิกออเดอร์นี้ใช่ไหม?")) return;
+        const snap = await db.ref('orders/' + key).once('value');
+        const val = snap.val();
+        val.status = 'cancel';
+        val.finishedAt = Date.now();
+        await db.ref('history').push(val);
+        await db.ref('orders/' + key).remove();
+    }
+
+    // [5] ระบบตกแต่งเครื่องใครเครื่องมัน
+    function applyDecor() {
+        document.body.style.background = document.getElementById('cfg-bg').value;
+        const url = document.getElementById('cfg-url').value;
+        if(url) document.getElementById('mascot-img').src = url;
+    }
+
+    function uploadImage(input) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('mascot-img').src = e.target.result;
+            document.getElementById('cfg-url').value = "";
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function saveConfig() {
+        const decor = { 
+            bg: document.getElementById('cfg-bg').value, 
+            img: document.getElementById('mascot-img').src 
+        };
+        localStorage.setItem('nature_admin_cfg', JSON.stringify(decor));
+        alert("บันทึกการตกแต่งเครื่องนี้เรียบร้อย!");
+    }
+
+    window.onload = () => {
+        const saved = localStorage.getItem('nature_admin_cfg');
+        if(saved) {
+            const d = JSON.parse(saved);
+            document.body.style.background = d.bg;
+            document.getElementById('mascot-img').src = d.img;
+            document.getElementById('cfg-bg').value = d.bg;
+        }
+    };
+
+    function switchPage(p) {
+        document.getElementById('page-live').style.display = p==='live' ? 'grid' : 'none';
+        document.getElementById('page-history').style.display = p==='history' ? 'block' : 'none';
+        document.getElementById('page-settings').style.display = p==='settings' ? 'block' : 'none';
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         event.currentTarget.classList.add('active');
     }
 </script>
