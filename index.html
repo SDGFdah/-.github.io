@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet - Admin (Official)</title>
+    <title>Nature Gourmet Admin - Official</title>
     
     <!-- โหลด Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -22,12 +23,13 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { 
             background: white; border-radius: 20px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
-            border-left: 10px solid var(--s); position: relative; margin-bottom: 10px; animation: slideIn 0.3s ease;
+            border-left: 10px solid var(--s); position: relative; margin-bottom: 10px;
         }
-        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn { border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
         .btn-done { background: var(--p); color: white; }
-        .btn-cancel { background: #fee2e2; color: #ef4444; font-size: 0.8rem; }
+        .btn-done:hover { background: #1e3d1a; }
+        .price { text-align: right; font-weight: 600; color: var(--p); font-size: 1.2rem; margin-top: 10px; }
+        .item-list { font-size: 0.9rem; color: #444; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -39,20 +41,26 @@
 
 <div class="nav">
     <div class="nav-item active" id="nav-live" onclick="changePage('live')">ออเดอร์ใหม่</div>
-    <div class="nav-item" id="nav-history" onclick="changePage('history')">ประวัติ</div>
+    <div class="nav-item" id="nav-history" onclick="changePage('history')">ประวัติงาน</div>
 </div>
 
 <div class="container">
+    <!-- หน้าออเดอร์ปัจจุบัน -->
     <div id="page-live" class="grid">
-        <p style="text-align:center; grid-column:1/-1; margin-top:50px;">กำลังรอออเดอร์ใหม่จากระบบ...</p>
+        <p style="text-align:center; grid-column:1/-1; margin-top:50px; opacity:0.5;">กำลังโหลดข้อมูลจาก verified_orders...</p>
     </div>
-    <div id="page-history" style="display:none;" class="grid"></div>
+    
+    <!-- หน้าประวัติ -->
+    <div id="page-history" style="display:none;" class="grid">
+        <p style="text-align:center; grid-column:1/-1; margin-top:50px; opacity:0.5;">กำลังโหลดประวัติ...</p>
+    </div>
 </div>
 
+<!-- เสียงแจ้งเตือน -->
 <audio id="bell" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-    // 1. Firebase Configuration (อ้างอิงจากโปรเจกต์ของพี่)
+    // การตั้งค่า Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyARQ9iDSAP-HSnZlHH854p1qnUPCmjtyvo",
         authDomain: "project-8472595372192265726.firebaseapp.com",
@@ -66,122 +74,75 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
 
-    // 2. เช็คสถานะการเชื่อมต่อ
-    db.ref(".info/connected").on("value", (snap) => {
+    // เช็คสถานะเน็ต
+    db.ref(".info/connected").on("value", snap => {
         const stat = document.getElementById('net-status');
         if (snap.val() === true) {
-            stat.innerText = "🟢 ออนไลน์ - พร้อมรับออเดอร์";
+            stat.innerText = "🟢 ออนไลน์ - เชื่อมต่อ verified_orders สำเร็จ";
             stat.style.background = "#27ae60";
         } else {
-            stat.innerText = "🔴 ออฟไลน์ - กำลังพยายามเชื่อมต่อใหม่...";
+            stat.innerText = "🔴 ออฟไลน์ - กรุณาเช็คอินเทอร์เน็ต";
             stat.style.background = "#c0392b";
         }
     });
 
-    // 3. ระบบดึงข้อมูลแบบ "ค้นหาอัตโนมัติ" (แก้ปัญหาข้อมูลเข้าช้า/Path ซ้อน)
-    // เราจะดึงข้อมูลจาก Root เพื่อให้มั่นใจว่าเห็นข้อมูลทุกจุด
-    db.ref().on('value', (snapshot) => {
-        const allData = snapshot.val();
-        console.log("Raw Data Updated:", allData);
-
-        let liveOrders = null;
-        let historyOrders = null;
-
-        if (allData) {
-            // วิธีที่ 1: ตรวจสอบที่ชั้นนอกสุด (ปกติ)
-            if (allData.verified_orders) liveOrders = allData.verified_orders;
-            if (allData.history) historyOrders = allData.history;
-
-            // วิธีที่ 2: ตรวจสอบเผื่อข้อมูลซ้อนอยู่ในชื่อโปรเจกต์ (ตามโครงสร้างบางแบบ)
-            const subData = allData['project-8472595372192265726'];
-            if (subData) {
-                if (subData.verified_orders) liveOrders = subData.verified_orders;
-                if (subData.history) historyOrders = subData.history;
-            }
-        }
-
-        // แสดงผล
-        render(liveOrders, 'page-live', true);
-        render(historyOrders, 'page-history', false);
-
-        // เสียงแจ้งเตือน
-        if (liveOrders) {
-            document.getElementById('bell').play().catch(() => {});
-        }
+    // ดึงออเดอร์ใหม่ (Live)
+    db.ref('verified_orders').on('value', snap => {
+        renderOrders(snap.val(), 'page-live', true);
+        if(snap.val()) { document.getElementById('bell').play().catch(()=>{}); }
     });
 
-    // 4. ฟังก์ชันย้ายออเดอร์
-    async function moveOrder(key, status) {
-        // ค้นหา Path ปัจจุบันของออเดอร์นี้
-        let sourcePath = 'verified_orders/' + key;
-        let snap = await db.ref(sourcePath).once('value');
+    // ดึงประวัติ (History)
+    db.ref('history').limitToLast(20).on('value', snap => {
+        renderOrders(snap.val(), 'page-history', false);
+    });
 
-        // ถ้าไม่เจอชั้นนอก ลองหาในชั้นซ้อน
-        if (!snap.exists()) {
-            sourcePath = 'project-8472595372192265726/verified_orders/' + key;
-            snap = await db.ref(sourcePath).once('value');
-        }
-
-        if (snap.exists()) {
-            const val = snap.val();
-            val.status = status;
-            val.finishedAt = new Date().toLocaleString();
-            
-            // ส่งไปประวัติ และ ลบออกจากรายการสด
-            await db.ref('history').push(val);
-            await db.ref(sourcePath).remove();
-        } else {
-            alert("ไม่พบข้อมูลออเดอร์นี้ อาจถูกดำเนินการไปแล้ว");
+    // ฟังก์ชันย้ายข้อมูล (เสร็จงาน)
+    async function moveOrder(key) {
+        const snap = await db.ref('verified_orders/' + key).once('value');
+        if(snap.exists()){
+            const data = snap.val();
+            data.completedAt = new Date().toLocaleString();
+            // ย้ายไป history ก่อนแล้วค่อยลบจาก verified_orders
+            await db.ref('history').push(data);
+            await db.ref('verified_orders/' + key).remove();
         }
     }
 
-    // 5. ฟังก์ชันสร้างการ์ดออเดอร์
-    function render(data, targetId, isLive) {
+    // ฟังก์ชันวาดการ์ดออเดอร์
+    function renderOrders(data, targetId, isLive) {
         const div = document.getElementById(targetId);
-        if (!data || Object.keys(data).length === 0) { 
-            div.innerHTML = `<p style="grid-column:1/-1; text-align:center; opacity:0.5; margin-top:50px;">
-                ${isLive ? 'ไม่มีออเดอร์ใหม่ในขณะนี้' : 'ยังไม่มีประวัติการทำรายการ'}
-            </p>`; 
+        if(!data) { 
+            div.innerHTML = "<p style='grid-column:1/-1; text-align:center; opacity:0.5; margin-top:50px;'>ไม่มีข้อมูลในส่วนนี้</p>"; 
             return; 
         }
         
         let html = "";
-        const keys = Object.keys(data).reverse(); // เอาอันใหม่ขึ้นก่อน
+        const keys = Object.keys(data).reverse(); // เอาล่าสุดขึ้นก่อน
+        
         keys.forEach(key => {
             const o = data[key];
             let itemsHtml = "";
-            if (o.items) {
-                for (let item in o.items) {
-                    if (o.items[item] > 0) itemsHtml += `• ${item} x ${o.items[item]}<br>`;
+            if(o.items) {
+                for(let name in o.items) {
+                    if(o.items[name] > 0) itemsHtml += `• ${name} x ${o.items[name]}<br>`;
                 }
             }
 
             html += `
-                <div class="card" style="${!isLive ? 'border-left-color:#ccc; opacity:0.8;' : ''}">
-                    <div style="font-weight:600; font-size:1.1rem; color:var(--p);">คุณ ${o.customer || 'ลูกค้า'}</div>
-                    <div style="font-size:0.9rem; color:var(--s); font-weight:600;">📞 ${o.tel || '-'}</div>
+                <div class="card" style="${!isLive ? 'border-left-color:#ccc; opacity:0.7;' : ''}">
+                    <div style="font-weight:600; font-size:1.1rem; color:var(--p);">คุณ ${o.customer || 'ไม่ระบุชื่อ'}</div>
+                    <div style="font-size:0.85rem; color:#666;">📞 ${o.tel || '-'}</div>
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                    <div style="font-size:0.95rem; line-height:1.5;">${itemsHtml || 'ไม่มีรายการอาหาร'}</div>
-                    <div style="font-size:0.85rem; color:#666; margin-top:5px; border-top: 1px dashed #eee; padding-top:5px;">
-                        📝 หมายเหตุ: ${o.cooking_instruction || '-'}
-                    </div>
-                    <div style="text-align:right; font-weight:600; color:var(--p); margin-top:10px; font-size:1.2rem;">
-                        ${Number(o.total_price || 0).toLocaleString()} บาท
-                    </div>
-                    ${isLive ? `
-                        <button class="btn btn-done" onclick="moveOrder('${key}', 'completed')">✔️ เสร็จงาน / เก็บประวัติ</button>
-                        <button class="btn btn-cancel" onclick="moveOrder('${key}', 'cancelled')">❌ ยกเลิก</button>
-                    ` : `
-                        <div style="text-align:center; color:#999; font-size:0.8rem; margin-top:10px; background:#f9f9f9; padding:5px; border-radius:5px;">
-                            สถานะ: ${o.status === 'completed' ? 'สำเร็จ' : 'ยกเลิก'}
-                        </div>
-                    `}
+                    <div class="item-list">${itemsHtml || 'ไม่มีรายการอาหาร'}</div>
+                    <div style="font-size:0.8rem; color:#888; margin-top:5px;">📝 ${o.cooking_instruction || '-'}</div>
+                    <div class="price">${Number(o.total_price).toLocaleString()} บาท</div>
+                    ${isLive ? `<button class="btn btn-done" onclick="moveOrder('${key}')">✔️ เสร็จงาน / เก็บประวัติ</button>` : `<div style="font-size:0.7rem; text-align:center; margin-top:10px; color:#999;">เสร็จสิ้นเมื่อ: ${o.completedAt || '-'}</div>`}
                 </div>`;
         });
         div.innerHTML = html;
     }
 
-    // 6. ฟังก์ชันสลับหน้า
     function changePage(p) {
         document.getElementById('page-live').style.display = p === 'live' ? 'grid' : 'none';
         document.getElementById('page-history').style.display = p === 'history' ? 'grid' : 'none';
