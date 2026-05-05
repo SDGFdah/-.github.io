@@ -1,362 +1,325 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Food Order Test</title>
-    <!-- เรียกใช้ Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-</head>
-<body>
-    <h1>ระบบสั่งอาหาร</h1>
-    <input type="text" id="foodName" placeholder="ระบุชื่ออาหาร">
-    <button onclick="sendData()">สั่งอาหารตอนนี้</button>
+npm install firebase
+mport { initializeApp } from 'firebase/app';
 
-    <script>
-        // ก๊อปปี้มาจากหน้า Config ของคุณ (เช็ค databaseURL ให้ดี ห้ามมี / ต่อท้าย)
-        const firebaseConfig = {
-            apiKey: "AIza...", 
-            authDomain: "project-8472595372192265726.firebaseapp.com",
-            databaseURL: "https://project-8472595372192265726-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "project-8472595372192265726",
-            storageBucket: "project-8472595372192265726.appspot.com",
-            messagingSenderId: "847259537219",
-            appId: "1:847259537219:web:..."
-        };
+// TODO: Replace the following with your app's Firebase configuration
+const firebaseConfig = {
+  //...
+};
 
-        // เริ่มต้น Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const database = firebase.database();
+const app = initializeApp(firebaseConfig);
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
+// Follow this pattern to import other Firebase services
+// import { } from 'firebase/<service>';
 
-        function sendData() {
-            const item = document.getElementById('foodName').value;
-            if(!item) return alert("กรุณาพิมพ์ชื่ออาหาร");
+// TODO: Replace the following with your app's Firebase configuration
+const firebaseConfig = {
+  //...
+};
 
-            // ส่งไปที่หัวข้อ orders ตามที่คุณตั้ง Rules ไว้
-            database.ref('orders').push({
-                food: item,
-                timestamp: new Date().toLocaleString()
-            })
-            .then(() => {
-                alert("ข้อมูลเข้า Firebase แล้ว! ไปดูที่หน้าจอได้เลย");
-            })
-            .catch((error) => {
-                alert("พังเพราะ: " + error.message);
-            });
-        }
-    </script>
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet Admin - All-In-One System</title>
+    <title>Nature Gourmet - Ultra Admin Premium</title>
     
-    <!-- รวม Firebase & Library ทุกอย่างไว้ที่นี่ -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;400;600&family=Prompt:wght@300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root { --p: #2d5a27; --a: #e67e22; --bg: #f4f7f6; --white: #ffffff; }
+        :root {
+            --primary: #2d5a27;
+            --accent: #d35400;
+            --glass: rgba(255, 255, 255, 0.85);
+            --text: #2c3e50;
+            --success: #27ae60;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; }
         
-        * { box-sizing: border-box; }
-        body { 
-            font-family: 'Kanit', sans-serif; 
-            margin: 0; 
-            background: var(--bg); 
-            background-size: cover; 
-            background-position: center; 
+        body {
+            font-family: 'Kanit', sans-serif;
+            margin: 0;
+            background-color: #f8f9fa;
+            background-size: cover;
+            background-position: center;
             background-attachment: fixed;
+            color: var(--text);
             min-height: 100vh;
         }
 
-        /* --- 1. Top Admin Console (Private) --- */
-        .admin-console {
-            background: #1a1a1a;
-            color: white;
-            padding: 10px 20px;
+        /* Luxury Toolbar */
+        .premium-tools {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 10px 25px;
             display: flex;
-            gap: 15px;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            border-bottom: 2px solid var(--a);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 2000;
         }
-        .admin-console input { padding: 6px; border-radius: 5px; border: none; width: 200px; font-size: 12px; }
-        .btn-ui { background: var(--a); color: white; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .btn-ui:hover { opacity: 0.8; }
 
-        /* --- 2. Header Section --- */
-        header { background: var(--p); color: white; padding: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; background: rgba(0,0,0,0.3); margin-top: 8px; }
+        .tool-group { display: flex; gap: 15px; align-items: center; }
+        .tool-input { 
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 8px 15px; border-radius: 25px; font-size: 12px; width: 220px;
+        }
+        .btn-luxury {
+            background: var(--primary); color: white; border: none; padding: 8px 18px;
+            border-radius: 25px; cursor: pointer; font-size: 12px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-luxury:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(45,90,39,0.4); }
 
-        /* --- 3. Navigation --- */
-        .nav { display: flex; background: white; sticky: top; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav-item { flex: 1; padding: 18px; text-align: center; cursor: pointer; font-weight: 600; color: #888; border-bottom: 4px solid transparent; transition: 0.3s; }
-        .nav-item.active { color: var(--p); border-bottom-color: var(--p); background: #fcfdfc; }
+        /* Main Header */
+        header {
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(45,90,39,0.9), transparent);
+            color: white;
+        }
+        header h1 { margin: 0; font-family: 'Prompt'; font-weight: 500; letter-spacing: 4px; font-size: 2.5rem; }
 
-        /* --- 4. Content Area --- */
-        .container { padding: 25px; max-width: 1300px; margin: auto; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
+        /* Status Indicator */
+        .status-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 20px; font-size: 13px;
+            margin-top: 15px; background: rgba(0,0,0,0.4);
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot.online { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
+        .dot.offline { background: #ff4444; box-shadow: 0 0 10px #ff4444; }
+
+        /* Navigation Tab */
+        .nav-container { max-width: 600px; margin: -30px auto 30px; display: flex; background: white; border-radius: 35px; padding: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .nav-btn { flex: 1; padding: 15px; border-radius: 30px; border: none; background: none; cursor: pointer; font-weight: 600; color: #777; }
+        .nav-btn.active { background: var(--primary); color: white; }
+
+        /* Order Grid */
+        .container { padding: 20px; max-width: 1400px; margin: auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 30px; }
 
         /* Card Design */
         .order-card {
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-left: 10px solid var(--a);
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
             position: relative;
-            animation: slideUp 0.4s ease;
+            overflow: hidden;
         }
-        @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
-
-        .card-done { border-left-color: #bdc3c7; opacity: 0.8; }
-        .cust-name { font-size: 1.3rem; font-weight: 600; color: var(--p); }
-        .cust-tel { color: var(--a); font-weight: 500; font-size: 0.95rem; margin-bottom: 15px; }
+        .order-card::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--primary); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .customer-name { font-size: 1.4rem; font-weight: 600; color: var(--primary); }
+        .phone { color: var(--accent); font-size: 0.9rem; margin-bottom: 15px; display: block; }
         
-        .item-box { border-top: 1px solid #eee; padding: 15px 0; margin: 10px 0; }
-        .item-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; }
+        .item-list { border-top: 1px solid rgba(0,0,0,0.05); padding-top: 15px; }
+        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.02); }
+        .instruction { background: #fff5e6; padding: 12px; border-radius: 12px; font-size: 0.85rem; margin: 15px 0; color: #856404; border-left: 3px solid #ffeeba; }
         
-        .instruction { background: #fff9f0; padding: 10px; border-radius: 10px; font-size: 0.85rem; color: #666; border-left: 3px solid #f39c12; margin: 10px 0; }
-        .price-text { font-size: 1.8rem; font-weight: 600; text-align: right; color: var(--p); margin: 15px 0; }
-
-        .btn-finish { 
-            background: var(--p); color: white; border: none; width: 100%; padding: 15px; 
-            border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; font-family: 'Kanit';
-            transition: 0.3s;
+        .total-price { font-size: 2rem; font-weight: 600; text-align: right; margin: 20px 0; color: var(--text); }
+        
+        .btn-action {
+            background: var(--primary); color: white; border: none; width: 100%; padding: 18px;
+            border-radius: 18px; font-weight: 600; cursor: pointer; font-size: 1.1rem;
         }
-        .btn-finish:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(45,90,39,0.3); }
-
-        /* --- 5. System Monitor (Bottom) --- */
-        .sys-monitor {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #222; color: #0f0;
-            font-family: monospace; font-size: 11px; padding: 5px 15px; display: flex; justify-content: space-between; z-index: 2000;
-        }
+        .btn-action:hover { background: #1e3d1a; transform: scale(1.02); }
 
         .hidden { display: none !important; }
-        .empty-msg { grid-column: 1/-1; text-align: center; padding: 100px; color: #999; }
+
+        /* Animation */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .order-card { animation: fadeIn 0.5s ease backwards; }
     </style>
 </head>
 <body>
 
-    <!-- [PART 1] Admin Controls -->
-    <div class="admin-console">
-        <span><i class="fas fa-magic"></i> แต่งร้าน:</span>
-        <input type="text" id="bg-input" placeholder="วางลิงก์รูปภาพพื้นหลังที่นี่...">
-        <button class="btn-ui" onclick="applyBg('url')">ใช้พื้นหลัง</button>
-        <button class="btn-ui" onclick="document.getElementById('file-input').click()">อัปโหลดรูป</button>
-        <input type="file" id="file-input" class="hidden" accept="image/*" onchange="applyBg('file')">
-        <button class="btn-ui" style="background:#c0392b" onclick="clearBg()">รีเซ็ต</button>
-        <button class="btn-ui" style="background:#2980b9" onclick="location.reload()"><i class="fas fa-sync"></i> รีเฟรชระบบ</button>
+<div class="premium-tools">
+    <div class="tool-group">
+        <span style="font-size: 12px; opacity: 0.7;"><i class="fas fa-palette"></i> CUSTOMIZE:</span>
+        <input type="text" id="bg-link" class="tool-input" placeholder="วางลิงก์รูปภาพพื้นหลัง...">
+        <button class="btn-luxury" onclick="changeBg('url')">ใช้รูปนี้</button>
+        <button class="btn-luxury" onclick="document.getElementById('bg-file').click()"><i class="fas fa-upload"></i> อัปโหลด</button>
+        <input type="file" id="bg-file" class="hidden" onchange="changeBg('file')">
     </div>
-
-    <!-- [PART 2] Header -->
-    <header>
-        <h1 style="margin:0; letter-spacing: 2px;">NATURE GOURMET</h1>
-        <div id="status-label" class="status-badge">กำลังเชื่อมต่อสัญญาณ...</div>
-    </header>
-
-    <!-- [PART 3] Navigation -->
-    <div class="nav">
-        <div class="nav-item active" id="tab-live" onclick="showTab('live')">ออเดอร์เข้าใหม่ (<span id="count-live">0</span>)</div>
-        <div class="nav-item" id="tab-history" onclick="showTab('history')">ประวัติการขาย</div>
+    <div class="tool-group">
+        <button class="btn-luxury" style="background:#c0392b" onclick="resetSetting()"><i class="fas fa-undo"></i> รีเซ็ต</button>
+        <button class="btn-luxury" style="background:#2980b9" onclick="location.reload()"><i class="fas fa-sync-alt"></i> รีโหลดระบบ</button>
     </div>
+</div>
 
-    <!-- [PART 4] Main Content -->
-    <div class="container">
-        <!-- Live Orders Section -->
-        <div id="view-live" class="grid">
-            <div class="empty-msg">
-                <i class="fas fa-circle-notch fa-spin fa-3x"></i>
-                <p>กำลังค้นหาออเดอร์... หากนานเกินไปโปรดตรวจสอบเน็ต</p>
-            </div>
-        </div>
+<header>
+    <h1>NATURE GOURMET</h1>
+    <div class="status-chip">
+        <div id="status-dot" class="dot offline"></div>
+        <span id="status-text">กำลังค้นหาสัญญาณ...</span>
+    </div>
+</header>
 
-        <!-- History Section -->
-        <div id="view-history" class="grid hidden">
-            <div class="empty-msg">ไม่มีข้อมูลประวัติ</div>
+<div class="nav-container">
+    <button class="nav-btn active" id="tab-live" onclick="switchTab('live')">ออเดอร์ใหม่ (<span id="count-live">0</span>)</button>
+    <button class="nav-btn" id="tab-his" onclick="switchTab('history')">ประวัติการขาย</button>
+</div>
+
+<div class="container">
+    <div id="page-live" class="grid">
+        <div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.5;">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p style="margin-top:20px;">กำลังเชื่อมต่อฐานข้อมูลความเร็วสูง...</p>
         </div>
     </div>
+    <div id="page-history" class="grid hidden"></div>
+</div>
 
-    <!-- [PART 5] Sound & Monitor -->
-    <audio id="notif-snd" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-    <div class="sys-monitor">
-        <span id="log-text">SYSTEM: Initializing...</span>
-        <span id="log-time">--:--:--</span>
-    </div>
+<audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
-    <script>
-        // --- FIREBASE SETUP ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyARQ9iDSAP-HSnZlHH854p1qnUPCmjtyvo",
-            authDomain: "project-8472595372192265726.firebaseapp.com",
-            databaseURL: "https://project-8472595372192265726-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "project-8472595372192265726",
-            storageBucket: "project-8472595372192265726.firebasestorage.app",
-            messagingSenderId: "983091918200",
-            appId: "1:983091918200:web:ec462b7eaf04b724f2448d"
-        };
+<script>
+    // --- Config ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyARQ9iDSAP-HSnZlHH854p1qnUPCmjtyvo",
+        authDomain: "project-8472595372192265726.firebaseapp.com",
+        databaseURL: "https://project-8472595372192265726-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "project-8472595372192265726",
+        storageBucket: "project-8472595372192265726.firebasestorage.app",
+        messagingSenderId: "983091918200",
+        appId: "1:983091918200:web:ec462b7eaf04b724f2448d"
+    };
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let orderCache = 0;
 
-        // --- GLOBAL STATE ---
-        let currentLiveCount = 0;
+    // --- Signal Heartbeat (ระบบกู้สัญญาณ) ---
+    db.ref(".info/connected").on("value", (snap) => {
+        const dot = document.getElementById('status-dot');
+        const txt = document.getElementById('status-text');
+        if (snap.val() === true) {
+            dot.className = "dot online";
+            txt.innerText = "ONLINE: ระบบเสถียร 100%";
+            console.log("Connected.");
+        } else {
+            dot.className = "dot offline";
+            txt.innerText = "OFFLINE: กำลังต่อสัญญาณใหม่...";
+            // สั่งให้ Reconnect อัตโนมัติ
+            setTimeout(() => { firebase.database().goOnline(); }, 2000);
+        }
+    });
 
-        // --- CORE FUNCTIONS ---
-        
-        // 1. Connection Monitor
-        db.ref(".info/connected").on("value", (snap) => {
-            const label = document.getElementById('status-label');
-            if (snap.val()) {
-                label.innerHTML = "● ONLINE: เชื่อมต่อฐานข้อมูลเสถียร";
-                label.style.color = "#2ecc71";
-                updateLog("Database connected successfully.");
-            } else {
-                label.innerHTML = "○ OFFLINE: ขาดการติดต่อ...";
-                label.style.color = "#e74c3c";
-                updateLog("Connection lost. Retrying...");
+    // --- Data Stream ---
+    function initApp() {
+        // ออเดอร์ใหม่
+        db.ref('verified_orders').on('value', snap => {
+            const data = snap.val();
+            const count = data ? Object.keys(data).length : 0;
+            document.getElementById('count-live').innerText = count;
+            
+            if(count > orderCache && orderCache !== 0) {
+                document.getElementById('notif-sound').play().catch(()=>{});
             }
+            orderCache = count;
+            renderOrders(data, 'page-live', true);
         });
 
-        // 2. Data Listener (ดึงข้อมูล)
-        function initData() {
-            // ดึงออเดอร์ใหม่
-            db.ref('verified_orders').on('value', snap => {
-                const data = snap.val();
-                const count = data ? Object.keys(data).length : 0;
-                
-                if(count > currentLiveCount && currentLiveCount !== 0) {
-                    document.getElementById('notif-snd').play().catch(()=>{});
-                    updateLog("NEW ORDER RECEIVED!");
-                }
-                currentLiveCount = count;
-                document.getElementById('count-live').innerText = count;
-                
-                render(data, 'view-live', true);
-            });
+        // ประวัติ
+        db.ref('history').limitToLast(20).on('value', snap => {
+            renderOrders(snap.val(), 'page-history', false);
+        });
+    }
 
-            // ดึงประวัติ (20 รายการล่าสุด)
-            db.ref('history').limitToLast(20).on('value', snap => {
-                render(snap.val(), 'view-history', false);
-            });
+    function renderOrders(data, targetId, isLive) {
+        const container = document.getElementById(targetId);
+        if(!data) {
+            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.5;">ไม่มีรายการอาหารขณะนี้</div>`;
+            return;
         }
 
-        // 3. Render UI (วาดหน้าบัตร)
-        function render(data, targetId, isLive) {
-            const container = document.getElementById(targetId);
-            if(!data) {
-                container.innerHTML = `<div class="empty-msg">ไม่มีรายการ${isLive ? 'ใหม่' : 'ประวัติ'}</div>`;
-                return;
+        let html = "";
+        const keys = Object.keys(data).reverse();
+
+        keys.forEach(key => {
+            const o = data[key];
+            let itemsHTML = "";
+            for(let name in o.items) {
+                if(o.items[name] > 0) {
+                    itemsHTML += `<div class="item-row"><span>${name}</span><span>x${o.items[name]}</span></div>`;
+                }
             }
 
-            let html = "";
-            const sortedKeys = Object.keys(data).reverse();
-
-            sortedKeys.forEach(id => {
-                const order = data[id];
-                let itemsList = "";
-                
-                // วนลูปรายการอาหาร
-                if(order.items) {
-                    for(let name in order.items) {
-                        if(order.items[name] > 0) {
-                            itemsList += `<div class="item-row"><span>${name}</span><span>x${order.items[name]}</span></div>`;
-                        }
-                    }
+            html += `
+            <div class="order-card">
+                <div class="card-header">
+                    <div>
+                        <span class="customer-name">คุณ ${o.customer || 'ลูกค้า'}</span>
+                        <span class="phone"><i class="fas fa-phone"></i> ${o.tel || '-'}</span>
+                    </div>
+                </div>
+                <div class="item-list">${itemsHTML}</div>
+                ${o.cooking_instruction ? `<div class="instruction"><i class="fas fa-comment-dots"></i> ${o.cooking_instruction}</div>` : ''}
+                <div class="total-price">${Number(o.total_price).toLocaleString()} ฿</div>
+                ${isLive ? 
+                    `<button class="btn-action" onclick="finishOrder('${key}')">เสร็จสิ้นออเดอร์</button>` : 
+                    `<div style="text-align:center; color:#999; font-size:0.8rem;">ทำรายการเสร็จเมื่อ: ${o.doneAt}</div>`
                 }
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
 
-                html += `
-                <div class="order-card ${!isLive ? 'card-done' : ''}">
-                    <div class="cust-name">คุณ ${order.customer || 'ไม่ระบุชื่อ'}</div>
-                    <div class="cust-tel"><i class="fas fa-phone"></i> ${order.tel || '-'}</div>
-                    
-                    <div class="item-box">${itemsList}</div>
-                    
-                    ${order.cooking_instruction ? `<div class="instruction">📝 ${order.cooking_instruction}</div>` : ''}
-                    
-                    <div class="price-text">${Number(order.total_price || 0).toLocaleString()} ฿</div>
-                    
-                    ${isLive ? 
-                        `<button class="btn-finish" onclick="completeOrder('${id}')">✅ ทำเสร็จแล้ว</button>` : 
-                        `<div style="text-align:center; font-size:0.75rem; color:#999;">จัดทำเมื่อ: ${order.doneAt || '-'}</div>`
-                    }
-                </div>`;
-            });
-            container.innerHTML = html;
+    async function finishOrder(key) {
+        const snap = await db.ref('verified_orders/' + key).once('value');
+        if(snap.exists()) {
+            const data = snap.val();
+            data.doneAt = new Date().toLocaleString('th-TH');
+            await db.ref('history').push(data);
+            await db.ref('verified_orders/' + key).remove();
         }
+    }
 
-        // 4. Complete Action
-        async function completeOrder(id) {
-            try {
-                updateLog(`Processing order ${id}...`);
-                const snap = await db.ref('verified_orders/' + id).once('value');
-                if(snap.exists()) {
-                    const data = snap.val();
-                    data.doneAt = new Date().toLocaleString('th-TH');
-                    
-                    // ย้ายไป history แล้วลบจาก verified
-                    await db.ref('history').push(data);
-                    await db.ref('verified_orders/' + id).remove();
-                    updateLog(`Order ${id} moved to history.`);
-                }
-            } catch (e) {
-                alert("เกิดข้อผิดพลาด: " + e.message);
-            }
+    // --- UI Control ---
+    function switchTab(type) {
+        document.getElementById('page-live').classList.toggle('hidden', type !== 'live');
+        document.getElementById('page-history').classList.toggle('hidden', type !== 'history');
+        document.getElementById('tab-live').classList.toggle('active', type === 'live');
+        document.getElementById('tab-his').classList.toggle('active', type === 'history');
+    }
+
+    function changeBg(mode) {
+        if(mode === 'url') {
+            const url = document.getElementById('bg-link').value;
+            if(url) applyBg(url);
+        } else {
+            const file = document.getElementById('bg-file').files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => applyBg(e.target.result);
+            if(file) reader.readAsDataURL(file);
         }
+    }
 
-        // --- UI HELPERS ---
-        function showTab(t) {
-            document.getElementById('view-live').classList.toggle('hidden', t !== 'live');
-            document.getElementById('view-history').classList.toggle('hidden', t !== 'history');
-            document.getElementById('tab-live').classList.toggle('active', t === 'live');
-            document.getElementById('tab-history').classList.toggle('active', t === 'history');
-            updateLog(`Switched to ${t} view.`);
-        }
+    function applyBg(src) {
+        document.body.style.backgroundImage = `linear-gradient(rgba(248, 249, 250, 0.8), rgba(248, 249, 250, 0.8)), url('${src}')`;
+        localStorage.setItem('admin_bg_lux', src);
+    }
 
-        function applyBg(mode) {
-            if(mode === 'url') {
-                const url = document.getElementById('bg-input').value;
-                if(url) {
-                    document.body.style.backgroundImage = `linear-gradient(rgba(244,247,246,0.8), rgba(244,247,246,0.8)), url('${url}')`;
-                    localStorage.setItem('ng_bg', url);
-                }
-            } else {
-                const file = document.getElementById('file-input').files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const src = e.target.result;
-                    document.body.style.backgroundImage = `linear-gradient(rgba(244,247,246,0.8), rgba(244,247,246,0.8)), url('${src}')`;
-                    localStorage.setItem('ng_bg', src);
-                };
-                if(file) reader.readAsDataURL(file);
-            }
-        }
+    function resetSetting() {
+        localStorage.removeItem('admin_bg_lux');
+        location.reload();
+    }
 
-        function clearBg() {
-            document.body.style.backgroundImage = '';
-            localStorage.removeItem('ng_bg');
-        }
+    if(localStorage.getItem('admin_bg_lux')) applyBg(localStorage.getItem('admin_bg_lux'));
+    
+    initApp();
+</script>
 
-        function updateLog(msg) {
-            document.getElementById('log-text').innerText = "SYSTEM: " + msg;
-            document.getElementById('log-time').innerText = new Date().toLocaleTimeString();
-        }
-
-        // Load Saved Background
-        if(localStorage.getItem('ng_bg')) {
-            const saved = localStorage.getItem('ng_bg');
-            document.body.style.backgroundImage = `linear-gradient(rgba(244,247,246,0.8), rgba(244,247,246,0.8)), url('${saved}')`;
-        }
-
-        // Start App
-        initData();
-
-    </script>
 </body>
 </html>
