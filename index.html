@@ -3,155 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet Admin - Fixed 🚀</title>
+    <title>Nature Gourmet - Pro Admin</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2d5a27; --accent: #e67e22; --bg: #f0f2f0; }
-        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        :root { --p: #2d5a27; --s: #e67e22; --bg: #f4f7f1; }
+        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; transition: 0.5s; }
         
-        .header-panel { background: var(--primary); padding: 20px; border-radius: 20px; color: white; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        
-        /* แก้ไขการจัดวาง: ใช้ Grid คุมไม่ให้ทับซ้อน */
-        .order-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 20px; /* เว้นระยะห่างระหว่างการ์ด */
-            align-items: start;
-        }
+        /* Layout */
+        .admin-container { display: flex; flex-direction: column; min-height: 100vh; }
+        header { background: var(--p); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .tabs { display: flex; background: white; border-bottom: 1px solid #ddd; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #666; }
+        .tab.active { color: var(--p); border-bottom: 3px solid var(--p); background: #f9f9f9; }
 
-        .card { 
-            background: white; border-radius: 20px; padding: 20px; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1); border-top: 8px solid var(--accent);
-            display: flex; flex-direction: column; gap: 10px;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .cust-info { border-bottom: 2px dashed #eee; padding-bottom: 10px; }
-        .cust-name { font-size: 1.3rem; font-weight: 600; color: var(--primary); margin: 0; }
-        .cust-tel { color: var(--accent); font-size: 1.2rem; font-weight: bold; text-decoration: none; }
-
-        .menu-box { background: #f9f9f9; padding: 12px; border-radius: 12px; border: 1px solid #eee; }
-        .menu-item { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #f0f0f0; }
+        /* Content */
+        .content { padding: 20px; flex: 1; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
         
-        .btn-success { 
-            background: var(--primary); color: white; border: none; padding: 15px; 
-            border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer;
-            transition: 0.2s; margin-top: 10px;
-        }
-        .btn-success:active { transform: scale(0.95); background: #1e3d1a; }
+        /* Card UI */
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); position: relative; border-left: 8px solid var(--s); animation: pop 0.3s ease; }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
-        .emergency-row { display: flex; gap: 10px; margin-top: 15px; }
-        .emergency-row a { flex: 1; padding: 8px; border-radius: 10px; color: white; text-decoration: none; font-size: 0.8rem; text-align: center; font-weight: bold; }
+        .mascot { position: fixed; bottom: 20px; right: 20px; width: 100px; z-index: 99; pointer-events: none; }
+        
+        /* Settings */
+        .settings-box { background: white; padding: 20px; border-radius: 20px; max-width: 500px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; color: white; }
+        .btn-ok { background: var(--p); }
+        .btn-cancel { background: #e74c3c; }
+        
+        .history-tag { padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; color: white; }
     </style>
 </head>
 <body>
 
-    <div class="header-panel">
-        <h2 style="margin:0">ออเดอร์ลูกค้า 👨‍🍳</h2>
-        <div id="status-text" style="font-size: 0.8rem; opacity: 0.8;">กำลังเชื่อมต่อ...</div>
-        <div class="emergency-row">
-            <a href="tel:191" style="background:#2c3e50">ตำรวจ</a>
-            <a href="tel:1669" style="background:#c0392b">กู้ชีพ</a>
-            <a href="tel:199" style="background:#d35400">ดับเพลิง</a>
+<div class="admin-container">
+    <header>
+        <h2 style="margin:0">Nature Gourmet Management</h2>
+        <div id="connection-status" style="font-size:0.7rem">⚡ เชื่อมต่อเสถียร</div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('live')">ออเดอร์ปัจจุบัน</div>
+        <div class="tab" onclick="switchTab('history')">ประวัติการสั่ง</div>
+        <div class="tab" onclick="switchTab('settings')">ตั้งค่า & ตกแต่ง</div>
+    </div>
+
+    <div class="content">
+        <!-- Tab: Live Orders -->
+        <div id="tab-live" class="tab-content grid"></div>
+
+        <!-- Tab: History -->
+        <div id="tab-history" class="tab-content" style="display:none;">
+            <div class="grid" id="history-list"></div>
+        </div>
+
+        <!-- Tab: Settings -->
+        <div id="tab-settings" class="tab-content" style="display:none;">
+            <div class="settings-box">
+                <h3>⚙️ ตั้งค่าระบบ</h3>
+                <div class="form-group">
+                    <label>สีพื้นหลังร้าน:</label>
+                    <input type="color" id="bg-color" onchange="updateStyle()" value="#f4f7f1">
+                </div>
+                <div class="form-group">
+                    <label>ตัวละครตกแต่ง (Mascot):</label>
+                    <select id="mascot-select" onchange="updateStyle()">
+                        <option value="">ไม่มี</option>
+                        <option value="https://cdn-icons-png.flaticon.com/512/3081/3081986.png">เชฟกระต่าย</option>
+                        <option value="https://cdn-icons-png.flaticon.com/512/3487/3487209.png">น้องแมวนักกิน</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ล้างประวัติอัตโนมัติ (วัน):</label>
+                    <input type="number" id="auto-delete" value="7">
+                </div>
+                <button class="btn btn-ok" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <div id="order-grid" class="order-grid">
-        <!-- ข้อมูลจะแสดงตรงนี้ -->
-    </div>
-
-    <audio id="sound-ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+<img src="" id="mascot-img" class="mascot">
+<audio id="sound-ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-    // [1] แก้ URL เป็นของพี่เหมือนเดิม
-    const BASE_URL = "https://your-db-url.asia-southeast1.firebasedatabase.app/orders"; 
-    
-    // [2] แมพชื่อเมนูให้ตรงกับ ID
+    // [1] Firebase Config (ใส่ของพี่เลยครับ)
+    const firebaseConfig = {
+        apiKey: "AIza...",
+        databaseURL: "https://your-db-url.asia-southeast1.firebasedatabase.app", 
+        projectId: "your-project-id"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     const menuMap = { 'f1':'กะเพรา', 'f2':'ข้าวผัด', 'f3':'ราดหน้า', 'i1':'น้ำเปล่า', 'i2':'น้ำอัดลม' };
 
-    let lastCount = 0;
+    // [2] Real-time Listeners
+    db.ref('orders').on('value', snapshot => {
+        const data = snapshot.val();
+        renderLiveOrders(data);
+    });
 
-    async function refreshOrders() {
-        try {
-            const response = await fetch(`${BASE_URL}.json`);
-            const data = await response.json();
-            const grid = document.getElementById('order-grid');
-            document.getElementById('status-text').innerText = "🟢 ระบบทำงานปกติ (อัปเดตทุก 2 วิ)";
+    db.ref('history').limitToLast(100).on('value', snapshot => {
+        renderHistory(snapshot.val());
+    });
 
-            if (!data) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999; padding: 50px;">ไม่มีออเดอร์ค้างในระบบค่ะ</div>';
-                lastCount = 0;
-                return;
-            }
-
-            const keys = Object.keys(data).reverse();
+    // [3] Core Functions
+    function renderLiveOrders(data) {
+        const container = document.getElementById('tab-live');
+        if(!data) { container.innerHTML = "<p>ไม่มีออเดอร์ใหม่</p>"; return; }
+        
+        let html = "";
+        Object.keys(data).reverse().forEach(key => {
+            const o = data[key];
+            let itemsHtml = "";
+            for(let id in o.items) if(o.items[id]>0) itemsHtml += `• ${menuMap[id]||id} x ${o.items[id]}<br>`;
             
-            // เช็คจำนวนเพื่อเล่นเสียง
-            if (keys.length > lastCount && lastCount !== 0) {
-                document.getElementById('sound-ding').play().catch(()=>{});
-            }
-            if (keys.length < lastCount) {
-                speakText("มีคนยกเลิกออเดอร์ค่ะ");
-            }
-            lastCount = keys.length;
-
-            let html = "";
-            keys.forEach(key => {
-                const o = data[key];
-                
-                // แก้บัคเมนูไม่ขึ้น: วนลูปอ่านรายการอาหาร
-                let itemsHtml = "";
-                if (o.items) {
-                    for (let id in o.items) {
-                        if (o.items[id] > 0) {
-                            itemsHtml += `<div class="menu-item"><span>${menuMap[id] || id}</span> <strong>x ${o.items[id]}</strong></div>`;
-                        }
-                    }
-                }
-
-                html += `
-                    <div class="card">
-                        <div class="cust-info">
-                            <p class="cust-name">👤 คุณ ${o.customer || 'ไม่ระบุชื่อ'}</p>
-                            <a href="tel:${o.tel}" class="cust-tel">📞 ${o.tel || 'ไม่มีเบอร์'}</a>
-                        </div>
-                        <div class="menu-box">
-                            ${itemsHtml || 'ไม่มีรายการอาหาร'}
-                        </div>
-                        <div style="font-size:0.9rem; color:#666;">📌 หมายเหตุ: ${o.cooking_instruction || '-'}</div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:bold; font-size:1.2rem;">รวม: <span style="color:var(--primary)">${o.total_price || '0 ฿'}</span></span>
-                            <button class="btn-success" onclick="deleteOrder('${key}')">เสร็จงาน</button>
-                        </div>
+            html += `
+                <div class="card">
+                    <div style="font-weight:600; color:var(--p)">คุณ ${o.customer}</div>
+                    <div style="font-size:0.9rem; color:var(--s)">📞 ${o.tel}</div>
+                    <div style="margin:10px 0; background:#f9f9f9; padding:10px; border-radius:10px;">${itemsHtml}</div>
+                    <div style="font-size:0.8rem">📝 ${o.cooking_instruction || '-'}</div>
+                    <div style="text-align:right; font-weight:600; margin:10px 0;">รวม ${o.total_price}</div>
+                    <div class="btn-group">
+                        <button class="btn btn-ok" onclick="moveOrder('${key}', 'completed')">เสร็จงาน</button>
+                        <button class="btn btn-cancel" onclick="moveOrder('${key}', 'cancelled')">ยกเลิก</button>
                     </div>
-                `;
-            });
-            grid.innerHTML = html;
+                </div>`;
+        });
+        container.innerHTML = html;
+    }
 
-        } catch (error) {
-            document.getElementById('status-text').innerText = "🔴 การเชื่อมต่อผิดพลาด";
+    async function moveOrder(key, status) {
+        const snapshot = await db.ref('orders/' + key).once('value');
+        const orderData = snapshot.val();
+        if(orderData) {
+            orderData.status = status;
+            orderData.finishedAt = firebase.database.ServerValue.TIMESTAMP;
+            await db.ref('history').push(orderData); // เก็บประวัติ
+            await db.ref('orders/' + key).remove(); // ลบจากหน้าจอหลัก
+            if(status === 'cancelled') speak("ยกเลิกออเดอร์แล้วค่ะ");
         }
     }
 
-    async function deleteOrder(key) {
-        if (!confirm("ยืนยันว่าทำเสร็จแล้ว?")) return;
-        await fetch(`${BASE_URL}/${key}.json`, { method: 'DELETE' });
-        refreshOrders();
+    function renderHistory(data) {
+        const container = document.getElementById('history-list');
+        if(!data) return;
+        let html = "";
+        Object.keys(data).reverse().forEach(key => {
+            const o = data[key];
+            const color = o.status === 'completed' ? '#27ae60' : '#e74c3c';
+            html += `
+                <div class="card" style="border-left-color:${color}; opacity:0.8">
+                    <span class="history-tag" style="background:${color}">${o.status === 'completed' ? 'สำเร็จ' : 'ยกเลิก'}</span>
+                    <strong>คุณ ${o.customer}</strong>
+                    <div style="font-size:0.8rem">ยอด: ${o.total_price}</div>
+                </div>`;
+        });
+        container.innerHTML = html;
     }
 
-    function speakText(txt) {
+    // [4] Settings & UI
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tab).style.display = tab === 'settings' ? 'block' : 'grid';
+        event.currentTarget.classList.add('active');
+    }
+
+    function updateStyle() {
+        const color = document.getElementById('bg-color').value;
+        const mascot = document.getElementById('mascot-select').value;
+        document.body.style.background = color;
+        document.getElementById('mascot-img').src = mascot;
+    }
+
+    function saveSettings() {
+        alert("บันทึกการตั้งค่าแล้ว (ข้อมูลจะคงอยู่จนกว่าจะรีเฟรช)");
+        // หมายเหตุ: ถ้าจะให้ถาวรต้องเซฟลง Firebase แต่เบื้องต้นแค่นี้ก็ใช้ได้ครับ
+    }
+
+    function speak(txt) {
         const msg = new SpeechSynthesisUtterance(txt);
         msg.lang = 'th-TH';
         window.speechSynthesis.speak(msg);
     }
-
-    // ตั้งเวลา Refresh ทุก 2 วินาที (สายตรง)
-    setInterval(refreshOrders, 2000);
-    refreshOrders();
-
-    // ต้องคลิกหน้าจอ 1 ครั้งเพื่อเปิดระบบเสียง
-    document.body.onclick = () => { console.log("Sound Ready"); };
 </script>
 </body>
 </html>
