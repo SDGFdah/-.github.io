@@ -3,198 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Gourmet - Pro Admin</title>
+    <title>Nature Gourmet - Custom Admin</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
         :root { --p: #2d5a27; --s: #e67e22; --bg: #f4f7f1; }
         body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; transition: 0.5s; }
         
-        /* Layout */
-        .admin-container { display: flex; flex-direction: column; min-height: 100vh; }
-        header { background: var(--p); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
-        .tabs { display: flex; background: white; border-bottom: 1px solid #ddd; }
-        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #666; }
-        .tab.active { color: var(--p); border-bottom: 3px solid var(--p); background: #f9f9f9; }
+        header { background: var(--p); color: white; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; }
+        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; color: #888; transition: 0.3s; }
+        .nav-item.active { color: var(--p); border-bottom: 4px solid var(--p); background: #f9f9f9; }
 
-        /* Content */
-        .content { padding: 20px; flex: 1; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         
-        /* Card UI */
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); position: relative; border-left: 8px solid var(--s); animation: pop 0.3s ease; }
-        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        .mascot { position: fixed; bottom: 20px; right: 20px; width: 100px; z-index: 99; pointer-events: none; }
-        
+        /* Order Card */
+        .card { 
+            background: white; border-radius: 25px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+            border-left: 10px solid var(--s); position: relative; animation: popIn 0.3s ease;
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Mascot - ตกแต่งแบบลากวางได้ */
+        #my-mascot { 
+            position: fixed; bottom: 20px; right: 20px; width: 150px; 
+            z-index: 9999; cursor: move; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+        }
+
         /* Settings */
-        .settings-box { background: white; padding: 20px; border-radius: 20px; max-width: 500px; margin: auto; }
-        .form-group { margin-bottom: 15px; }
-        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .settings-pane { background: white; padding: 25px; border-radius: 25px; max-width: 550px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .field { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--p); }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #eee; }
 
-        /* Buttons */
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; color: white; }
-        .btn-ok { background: var(--p); }
-        .btn-cancel { background: #e74c3c; }
-        
-        .history-tag { padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; color: white; }
+        .btn { border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-save { background: var(--p); color: white; width: 100%; margin-top: 10px; }
+        .btn-save:hover { background: #1e3d1a; }
     </style>
 </head>
-<body>
+<body ondrop="drop(event)" ondragover="allowDrop(event)">
 
-<div class="admin-container">
-    <header>
-        <h2 style="margin:0">Nature Gourmet Management</h2>
-        <div id="connection-status" style="font-size:0.7rem">⚡ เชื่อมต่อเสถียร</div>
-    </header>
+<header>
+    <h1 style="margin:0">NATURE GOURMET ADMIN 👨‍🍳</h1>
+</header>
 
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('live')">ออเดอร์ปัจจุบัน</div>
-        <div class="tab" onclick="switchTab('history')">ประวัติการสั่ง</div>
-        <div class="tab" onclick="switchTab('settings')">ตั้งค่า & ตกแต่ง</div>
-    </div>
+<div class="nav">
+    <div class="nav-item active" onclick="showPage('live')">ออเดอร์เข้า</div>
+    <div class="nav-item" onclick="showPage('history')">ประวัติ</div>
+    <div class="nav-item" onclick="showPage('settings')">ตกแต่งร้าน</div>
+</div>
 
-    <div class="content">
-        <!-- Tab: Live Orders -->
-        <div id="tab-live" class="tab-content grid"></div>
-
-        <!-- Tab: History -->
-        <div id="tab-history" class="tab-content" style="display:none;">
-            <div class="grid" id="history-list"></div>
-        </div>
-
-        <!-- Tab: Settings -->
-        <div id="tab-settings" class="tab-content" style="display:none;">
-            <div class="settings-box">
-                <h3>⚙️ ตั้งค่าระบบ</h3>
-                <div class="form-group">
-                    <label>สีพื้นหลังร้าน:</label>
-                    <input type="color" id="bg-color" onchange="updateStyle()" value="#f4f7f1">
-                </div>
-                <div class="form-group">
-                    <label>ตัวละครตกแต่ง (Mascot):</label>
-                    <select id="mascot-select" onchange="updateStyle()">
-                        <option value="">ไม่มี</option>
-                        <option value="https://cdn-icons-png.flaticon.com/512/3081/3081986.png">เชฟกระต่าย</option>
-                        <option value="https://cdn-icons-png.flaticon.com/512/3487/3487209.png">น้องแมวนักกิน</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>ล้างประวัติอัตโนมัติ (วัน):</label>
-                    <input type="number" id="auto-delete" value="7">
-                </div>
-                <button class="btn btn-ok" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+<div class="container">
+    <div id="page-live" class="grid"></div>
+    <div id="page-history" style="display:none;" class="grid"></div>
+    
+    <div id="page-settings" style="display:none;">
+        <div class="settings-pane">
+            <h3 style="margin-top:0; color:var(--p)">🎨 ตกแต่งหน้าจอของคุณ (เฉพาะเครื่องนี้)</h3>
+            
+            <div class="field">
+                <label>สีพื้นหลัง:</label>
+                <input type="color" id="bg-color" onchange="applyLocalDecor()">
             </div>
+
+            <div class="field">
+                <label>ใส่ลิงก์รูปจากเน็ต (URL):</label>
+                <input type="text" id="mascot-url" placeholder="วางลิงก์รูป .png หรือ .jpg ที่นี่" oninput="applyLocalDecor()">
+            </div>
+
+            <div class="field">
+                <label>หรือ อัปโหลดรูปจากเครื่อง:</label>
+                <input type="file" id="mascot-file" accept="image/*" onchange="handleFileUpload(this)">
+            </div>
+
+            <p style="font-size: 0.8rem; color: #888;">* รูปตกแต่งสามารถคลิกลากวางตำแหน่งใดก็ได้บนหน้าจอ</p>
+            <button class="btn btn-save" onclick="saveDecor()">💾 บันทึกการตกแต่งถาวร</button>
         </div>
     </div>
 </div>
 
-<img src="" id="mascot-img" class="mascot">
-<audio id="sound-ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+<!-- รูปตกแต่ง (Mascot) -->
+<img src="" id="my-mascot" draggable="true" ondragstart="drag(event)">
+
+<audio id="ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
 <script>
-    // [1] Firebase Config (ใส่ของพี่เลยครับ)
+    // [1] FIREBASE CONFIG (พี่เปลี่ยนเป็นของพี่นะครับ)
     const firebaseConfig = {
-        apiKey: "AIza...",
-        databaseURL: "https://your-db-url.asia-southeast1.firebasedatabase.app", 
-        projectId: "your-project-id"
+        apiKey: "ใส่_API_KEY",
+        databaseURL: "ใส่_URL",
+        projectId: "ใส่_ID"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const menuMap = { 'f1':'กะเพรา', 'f2':'ข้าวผัด', 'f3':'ราดหน้า', 'i1':'น้ำเปล่า', 'i2':'น้ำอัดลม' };
 
-    // [2] Real-time Listeners
-    db.ref('orders').on('value', snapshot => {
-        const data = snapshot.val();
-        renderLiveOrders(data);
+    // [2] ระบบลากวาง (Drag & Drop)
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+    function drop(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+        var el = document.getElementById(data);
+        el.style.left = ev.clientX - (el.offsetWidth/2) + "px";
+        el.style.top = ev.clientY - (el.offsetHeight/2) + "px";
+        el.style.bottom = "auto"; el.style.right = "auto";
+    }
+
+    // [3] ระบบตกแต่งเฉพาะเครื่อง (LocalStorage)
+    function handleFileUpload(input) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('my-mascot').src = e.target.result;
+            document.getElementById('mascot-url').value = ""; // ล้างค่า URL
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function applyLocalDecor() {
+        const bg = document.getElementById('bg-color').value;
+        const url = document.getElementById('mascot-url').value;
+        document.body.style.background = bg;
+        if(url) document.getElementById('my-mascot').src = url;
+    }
+
+    function saveDecor() {
+        const decor = {
+            bg: document.getElementById('bg-color').value,
+            img: document.getElementById('my-mascot').src
+        };
+        localStorage.setItem('my_admin_decor', JSON.stringify(decor));
+        alert("บันทึกการตกแต่งเฉพาะเครื่องเรียบร้อย!");
+    }
+
+    // โหลดการตกแต่งที่เคยเซฟไว้
+    window.onload = () => {
+        const saved = localStorage.getItem('my_admin_decor');
+        if(saved) {
+            const d = JSON.parse(saved);
+            document.body.style.background = d.bg;
+            document.getElementById('my-mascot').src = d.img;
+            document.getElementById('bg-color').value = d.bg;
+        }
+    };
+
+    // [4] ระบบดึงข้อมูลออเดอร์ (เหมือนเดิมแต่เสถียรขึ้น)
+    db.ref('orders').on('value', snap => {
+        const data = snap.val();
+        render(data, 'page-live', true);
+        if(data && Object.keys(data).length > 0) document.getElementById('ding').play().catch(()=>{});
     });
 
-    db.ref('history').limitToLast(100).on('value', snapshot => {
-        renderHistory(snapshot.val());
+    db.ref('history').limitToLast(50).on('value', snap => {
+        render(snap.val(), 'page-history', false);
     });
 
-    // [3] Core Functions
-    function renderLiveOrders(data) {
-        const container = document.getElementById('tab-live');
-        if(!data) { container.innerHTML = "<p>ไม่มีออเดอร์ใหม่</p>"; return; }
-        
+    function render(data, targetId, isLive) {
+        const container = document.getElementById(targetId);
+        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>ว่างเปล่า...</p>"; return; }
         let html = "";
         Object.keys(data).reverse().forEach(key => {
             const o = data[key];
-            let itemsHtml = "";
-            for(let id in o.items) if(o.items[id]>0) itemsHtml += `• ${menuMap[id]||id} x ${o.items[id]}<br>`;
+            let items = "";
+            for(let id in o.items) if(o.items[id]>0) items += `• ${menuMap[id]||id} x ${o.items[id]}<br>`;
             
             html += `
-                <div class="card">
-                    <div style="font-weight:600; color:var(--p)">คุณ ${o.customer}</div>
-                    <div style="font-size:0.9rem; color:var(--s)">📞 ${o.tel}</div>
-                    <div style="margin:10px 0; background:#f9f9f9; padding:10px; border-radius:10px;">${itemsHtml}</div>
-                    <div style="font-size:0.8rem">📝 ${o.cooking_instruction || '-'}</div>
-                    <div style="text-align:right; font-weight:600; margin:10px 0;">รวม ${o.total_price}</div>
-                    <div class="btn-group">
-                        <button class="btn btn-ok" onclick="moveOrder('${key}', 'completed')">เสร็จงาน</button>
-                        <button class="btn btn-cancel" onclick="moveOrder('${key}', 'cancelled')">ยกเลิก</button>
-                    </div>
-                </div>`;
+            <div class="card" style="${!isLive ? 'opacity:0.7; border-left-color:#ccc;' : ''}">
+                <div style="font-weight:600; font-size:1.1rem;">คุณ ${o.customer}</div>
+                <div style="color:var(--s); font-weight:bold;">📞 ${o.tel}</div>
+                <div style="margin:10px 0; font-size:0.95rem; background:#f9f9f9; padding:10px; border-radius:10px;">${items}</div>
+                ${isLive ? `<button class="btn btn-save" onclick="done('${key}')">เสร็จงาน</button>` : `<small>${o.status === 'completed' ? '✅ สำเร็จ' : '❌ ยกเลิก'}</small>`}
+            </div>`;
         });
         container.innerHTML = html;
     }
 
-    async function moveOrder(key, status) {
-        const snapshot = await db.ref('orders/' + key).once('value');
-        const orderData = snapshot.val();
-        if(orderData) {
-            orderData.status = status;
-            orderData.finishedAt = firebase.database.ServerValue.TIMESTAMP;
-            await db.ref('history').push(orderData); // เก็บประวัติ
-            await db.ref('orders/' + key).remove(); // ลบจากหน้าจอหลัก
-            if(status === 'cancelled') speak("ยกเลิกออเดอร์แล้วค่ะ");
+    async function done(key) {
+        const snap = await db.ref('orders/' + key).once('value');
+        const val = snap.val();
+        if(val) {
+            val.status = 'completed';
+            val.finishedAt = firebase.database.ServerValue.TIMESTAMP;
+            await db.ref('history').push(val);
+            await db.ref('orders/' + key).remove();
         }
     }
 
-    function renderHistory(data) {
-        const container = document.getElementById('history-list');
-        if(!data) return;
-        let html = "";
-        Object.keys(data).reverse().forEach(key => {
-            const o = data[key];
-            const color = o.status === 'completed' ? '#27ae60' : '#e74c3c';
-            html += `
-                <div class="card" style="border-left-color:${color}; opacity:0.8">
-                    <span class="history-tag" style="background:${color}">${o.status === 'completed' ? 'สำเร็จ' : 'ยกเลิก'}</span>
-                    <strong>คุณ ${o.customer}</strong>
-                    <div style="font-size:0.8rem">ยอด: ${o.total_price}</div>
-                </div>`;
-        });
-        container.innerHTML = html;
-    }
-
-    // [4] Settings & UI
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('tab-' + tab).style.display = tab === 'settings' ? 'block' : 'grid';
+    function showPage(p) {
+        document.querySelectorAll('.tab-content, .grid, #page-settings').forEach(e => e.style.display = 'none');
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+        document.getElementById('page-' + p).style.display = p === 'settings' ? 'block' : 'grid';
         event.currentTarget.classList.add('active');
-    }
-
-    function updateStyle() {
-        const color = document.getElementById('bg-color').value;
-        const mascot = document.getElementById('mascot-select').value;
-        document.body.style.background = color;
-        document.getElementById('mascot-img').src = mascot;
-    }
-
-    function saveSettings() {
-        alert("บันทึกการตั้งค่าแล้ว (ข้อมูลจะคงอยู่จนกว่าจะรีเฟรช)");
-        // หมายเหตุ: ถ้าจะให้ถาวรต้องเซฟลง Firebase แต่เบื้องต้นแค่นี้ก็ใช้ได้ครับ
-    }
-
-    function speak(txt) {
-        const msg = new SpeechSynthesisUtterance(txt);
-        msg.lang = 'th-TH';
-        window.speechSynthesis.speak(msg);
     }
 </script>
 </body>
