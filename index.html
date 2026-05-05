@@ -3,135 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ร้านอาหารตามสั่ง - ลูกค้า</title>
+    <title>Nature Gourmet - Admin System</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --main: #ff4757; --sec: #2f3542; }
-        body { font-family: 'Kanit', sans-serif; background: #f1f2f6; margin: 0; padding: 10px; }
-        .page { display: none; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .active { display: block; }
-        img { width: 100%; border-radius: 15px; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; margin-top: 10px; font-weight: 600; }
-        .btn-next { background: var(--main); color: white; }
-        .btn-cancel { background: #ced4da; color: #333; font-size: 14px; }
-        .stock-tag { font-size: 12px; color: #ff4757; font-weight: bold; }
+        body { font-family: 'Kanit', sans-serif; background: #2d5a27; margin: 0; padding: 20px; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 20px; }
+        .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        
+        /* สไตล์การ์ดออเดอร์ */
+        .order-card { 
+            background: white; border-radius: 20px; padding: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .status-tag { position: absolute; top: 15px; right: 15px; background: #e67e22; color: white; padding: 4px 12px; border-radius: 10px; font-size: 0.8rem; }
+        .cust-info { border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .item-list { background: #f9f9f9; padding: 10px; border-radius: 10px; margin: 10px 0; }
+        
+        .btn-done { 
+            background: #2d5a27; color: white; border: none; width: 100%; 
+            padding: 12px; border-radius: 10px; font-size: 1rem; cursor: pointer; font-weight: 600;
+        }
+        .btn-done:hover { background: #1e3d1a; }
+        
+        /* เสียงแจ้งเตือน */
+        #notification-sound { display: none; }
     </style>
 </head>
 <body>
 
-    <!-- หน้าที่ 1: ข้อมูลลูกค้า -->
-    <div id="p1" class="page active">
-        <h2>สวัสดีครับ/ค่ะ 🙏</h2>
-        <p>คุณลูกค้าชื่ออะไรครับ/ค่ะ?</p>
-        <input type="text" id="custName" placeholder="ชื่อลูกค้า" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-        <p>กรุณากรอกช่องทางติดต่อ (เบอร์โทร):</p>
-        <input type="tel" id="custTel" placeholder="0xx-xxx-xxxx" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-        <button class="btn btn-next" onclick="go(2)">เข้าสู่หน้าร้าน ➔</button>
+    <div class="header">
+        <h1>รายการออเดอร์ใหม่ 👨‍🍳</h1>
+        <div id="connection-status" style="font-size: 0.8rem;">เชื่อมต่อฐานข้อมูลแล้ว</div>
     </div>
 
-    <!-- หน้าที่ 2: รีวิว/บรรยากาศ -->
-    <div id="p2" class="page">
-        <h2>บรรยากาศร้านเรา ✨</h2>
-        <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=500" alt="ร้าน">
-        <p>ร้านสะอาด บริการเป็นกันเอง เติมน้ำฟรีไม่อั้น!</p>
-        <button class="btn btn-next" onclick="go(3)">ดูเมนูอาหาร ➔</button>
-        <button class="btn btn-cancel" onclick="cancelOrder()">ยกเลิกออเดอร์</button>
-    </div>
-
-    <!-- หน้าที่ 3: เมนูและการคำนวณ -->
-    <div id="p3" class="page">
-        <h3>เลือกเมนูที่อยากทาน 🍳</h3>
-        <div id="menuList">
-            <!-- เมนูจะดึงจาก Stock แม่ค้า -->
-            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                <p><b>พะแนงหมู (60.-)</b> <span id="stock-panang" class="stock-tag">เหลือ 0</span></p>
-                <input type="number" id="qty-panang" value="0" min="0" onchange="calcPrice()">
-            </div>
-            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                <p><b>กะเพราหมูกรอบ (70.-)</b> <span id="stock-krapao" class="stock-tag">เหลือ 0</span></p>
-                <input type="number" id="qty-krapao" value="0" min="0" onchange="calcPrice()">
-            </div>
+    <div class="order-grid" id="order-display">
+        <!-- รายการออเดอร์จะมาโชว์ตรงนี้ -->
+        <div style="color: white; text-align: center; grid-column: 1/-1; padding: 50px;">
+            กำลังรอออเดอร์ใหม่...
         </div>
-        <p><b>รวมทั้งสิ้น: <span id="totalPrice">0</span> บาท</b></p>
-        <textarea id="note" placeholder="สั่งล่วงหน้า/ระบุพิเศษ (ไม่ใส่พริก/น้ำตาล/ผัก)" style="width:100%; margin-top:10px; border-radius:8px;"></textarea>
-        <button class="btn btn-next" onclick="go(4)">ไปที่หน้าชำระเงิน ➔</button>
-        <button class="btn btn-cancel" onclick="cancelOrder()">ยกเลิกออเดอร์</button>
     </div>
 
-    <!-- หน้าที่ 4: ชำระเงิน -->
-    <div id="p4" class="page">
-        <h3>ชำระเงิน 💰</h3>
-        <select id="payMethod" style="width:100%; padding:10px; margin-bottom:10px;">
-            <option value="เงินสด">เงินสด</option>
-            <option value="สแกนจ่าย">สแกนจ่าย</option>
-        </select>
-        <div id="qrArea" style="text-align:center;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PROMPTPAY" style="width:150px;">
-            <p>แนบสลิปที่นี่:</p>
-            <input type="file" id="slip">
-        </div>
-        <button class="btn btn-next" onclick="confirmOrder()" style="background:#2ed573;">ยืนยันและสั่งซื้อ!</button>
-        <button class="btn btn-cancel" onclick="cancelOrder()">ยกเลิกออเดอร์</button>
-        <p style="font-size:12px; color:gray; text-align:center;">ติดต่อแม่ค้า: 0xx-xxx-xxxx</p>
-    </div>
+    <!-- เสียงแจ้งเตือน (หาไฟล์ .mp3 มาเปลี่ยนลิงก์ได้ครับ) -->
+    <audio id="order-audio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
-    <script>
-        // ใส่ Config Firebase ของคุณที่นี่
-        const firebaseConfig = { apiKey: "...", databaseURL: "...", projectId: "..." };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<script>
+    // [1] Firebase Config (ก๊อปจากหน้าบ้านมาวางเลยครับ)
+    const firebaseConfig = {
+        apiKey: "AIza...",
+        databaseURL: "https://your-db-url.asia-southeast1.firebasedatabase.app", 
+        projectId: "your-project-id"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        let currentTotal = 0;
+    // [2] ดึงข้อมูลออเดอร์
+    const orderDisplay = document.getElementById('order-display');
+    const orderAudio = document.getElementById('order-audio');
 
-        function go(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('p' + page).classList.add('active');
+    // ฟังเหตุการณ์เมื่อมีออเดอร์ใหม่เพิ่มเข้า Database
+    db.ref('orders').orderByChild('timestamp').on('value', (snapshot) => {
+        orderDisplay.innerHTML = "";
+        const data = snapshot.val();
+        
+        if (!data) {
+            orderDisplay.innerHTML = `<div style="color: white; text-align: center; grid-column: 1/-1; padding: 50px;">ไม่มีออเดอร์ค้างในระบบ</div>`;
+            return;
         }
 
-        function calcPrice() {
-            let p1 = document.getElementById('qty-panang').value * 60;
-            let p2 = document.getElementById('qty-krapao').value * 70;
-            currentTotal = p1 + p2;
-            document.getElementById('totalPrice').innerText = currentTotal;
-        }
-
-        function confirmOrder() {
-            const name = document.getElementById('custName').value;
-            const tel = document.getElementById('custTel').value;
-            if(!name || !tel) return alert("กรุณากรอกข้อมูลให้ครบ");
-
-            db.ref('orders').push({
-                name: name,
-                tel: tel,
-                total: currentTotal,
-                note: document.getElementById('note').value,
-                method: document.getElementById('payMethod').value,
-                status: 'ordered',
-                time: new Date().getTime()
-            }).then(() => {
-                alert("สั่งซื้อสำเร็จ! รอแม่ค้าทำอาหารนะครับ");
-                location.reload();
-            });
-        }
-
-        function cancelOrder() {
-            if(confirm("ต้องการยกเลิกออเดอร์ใช่ไหม?")) {
-                db.ref('events').set({type: 'cancel', time: new Date().getTime()});
-                alert("ยกเลิกออเดอร์แล้ว ระบบจะแจ้งแม่ค้าเพื่อคืนเงิน (ถ้าจ่ายแล้ว)");
-                location.reload();
+        // เรียงออเดอร์ใหม่ไว้บนสุด
+        const sortedKeys = Object.keys(data).reverse();
+        
+        sortedKeys.forEach(key => {
+            const order = data[key];
+            const date = new Date(order.timestamp).toLocaleTimeString('th-TH');
+            
+            // สร้างรายการอาหาร
+            let itemsHtml = "";
+            for (let id in order.items) {
+                if (order.items[id] > 0) {
+                    itemsHtml += `<div>• ${id} จำนวน ${order.items[id]}</div>`; 
+                    // หมายเหตุ: ตรง id ถ้าอยากให้โชว์ชื่อเมนูภาษาไทย พี่ต้องทำ Mapping ชื่อไว้ครับ
+                }
             }
-        }
 
-        // ดึงจำนวนของจาก Database
-        db.ref('stock').on('value', snap => {
-            const data = snap.val();
-            if(data) {
-                document.getElementById('stock-panang').innerText = "เหลือ " + data.panang;
-                document.getElementById('stock-krapao').innerText = "เหลือ " + data.krapao;
-            }
+            const card = `
+                <div class="order-card" id="card-${key}">
+                    <div class="status-tag">${order.payment_type === 'scan' ? '💳 โอนเงิน' : '💵 เงินสด'}</div>
+                    <div class="cust-info">
+                        <strong>คุณ ${order.customer}</strong> (📞 ${order.tel})<br>
+                        <small style="color: #999;">เวลาสั่ง: ${date}</small>
+                    </div>
+                    
+                    <div class="item-list">
+                        ${itemsHtml}
+                        <div style="margin-top:5px; color: #e67e22; font-size: 0.9rem;">
+                            <strong>Note:</strong> ${order.cooking_instruction || '-'}
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 1.2rem; font-weight: bold; text-align: right; margin-bottom: 10px;">
+                        รวม: <span style="color: #2d5a27;">${order.total_price}</span>
+                    </div>
+                    
+                    <button class="btn-done" onclick="finishOrder('${key}')">ทำเสร็จแล้ว / ลบ</button>
+                </div>
+            `;
+            orderDisplay.innerHTML += card;
         });
-    </script>
+    });
+
+    // ฟังเสียงแจ้งเตือนเมื่อมี Child ใหม่เพิ่มขึ้นมา
+    let isFirstLoad = true;
+    db.ref('orders').on('child_added', (snapshot) => {
+        if (!isFirstLoad) {
+            orderAudio.play().catch(e => console.log("รอการคลิกหน้าจอก่อนเล่นเสียง"));
+        }
+    });
+    // ให้ผ่านโหลดครั้งแรกไปก่อน ไม่ให้เสียงดังตอนเปิดหน้าเว็บครั้งแรก
+    db.ref('orders').once('value', () => { isFirstLoad = false; });
+
+    // [3] ฟังก์ชันลบออเดอร์เมื่อทำเสร็จ
+    function finishOrder(key) {
+        if (confirm("ยืนยันว่าทำออเดอร์นี้เสร็จแล้วใช่ไหม?")) {
+            db.ref('orders/' + key).remove();
+        }
+    }
+</script>
 </body>
 </html>
